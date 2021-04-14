@@ -1,4 +1,4 @@
-use crate::openid::Expires;
+use crate::{error::ClientError, openid::Expires};
 use async_std::sync::RwLock;
 use core::fmt::{self, Debug, Formatter};
 use std::{ops::Deref, sync::Arc};
@@ -47,6 +47,13 @@ impl OpenIdTokenProvider {
         // fetch fresh token after releasing the read lock
 
         self.fetch_fresh_token().await
+    }
+
+    pub async fn provide_access_token(&self) -> Result<String, ClientError<reqwest::Error>> {
+        self.provide_token()
+            .await
+            .map(|token| token.access_token)
+            .map_err(|err| ClientError::Token(Box::new(err)))
     }
 
     async fn fetch_fresh_token(&self) -> Result<openid::Bearer, openid::error::Error> {

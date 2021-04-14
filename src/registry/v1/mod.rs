@@ -1,7 +1,7 @@
-#[cfg(feature = "reqwest")]
+#[cfg(feature = "with_reqwest")]
 mod client;
 mod data;
 
-#[cfg(feature = "reqwest")]
+#[cfg(feature = "with_reqwest")]
 pub use client::*;
 pub use data::*;

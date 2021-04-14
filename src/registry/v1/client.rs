@@ -1,20 +1,21 @@
 use super::data::*;
+use crate::openid::TokenInjector;
 use crate::{error::ClientError, openid::OpenIdTokenProvider, Context, Translator};
-use reqwest::{Client, Response, StatusCode};
+use reqwest::{Response, StatusCode};
 use url::Url;
 
 /// A device registry client backed by reqwest.
 #[derive(Clone, Debug)]
-pub struct RegistryClient {
-    client: Client,
+pub struct Client {
+    client: reqwest::Client,
     device_registry_url: Url,
     token_provider: Option<OpenIdTokenProvider>,
 }
 
-impl RegistryClient {
+impl Client {
     /// Create a new client instance.
     pub fn new(
-        client: Client,
+        client: reqwest::Client,
         device_registry_url: Url,
         token_provider: Option<OpenIdTokenProvider>,
     ) -> Self {
@@ -35,7 +36,7 @@ impl RegistryClient {
             self.device_registry_url
                 .join(&format!("/api/v1/apps/{}/devices/{}", application, device))?,
         );
-        let req = crate::openid::inject_token(self.token_provider.clone(), req, context).await?;
+        let req = self.token_provider.inject_token(req, context).await?;
 
         let response: Response = req.send().await?;
 
