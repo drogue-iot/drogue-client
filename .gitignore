@@ -1,0 +1,8 @@
+# Rust - library project
+
+/target
+Cargo.lock
+
+# IntelliJ
+
+.idea/
