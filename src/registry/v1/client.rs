@@ -98,10 +98,58 @@ impl Client {
     }
 
     async fn get_response<T: DeserializeOwned>(response: Response) -> ClientResult<Option<T>> {
-        log::debug!("Response: {:#?}", response);
+        log::debug!("Eval get response: {:#?}", response);
         match response.status() {
             StatusCode::OK => Ok(Some(response.json().await?)),
             StatusCode::NOT_FOUND => Ok(None),
+            _ => Self::default_response(response).await,
+        }
+    }
+
+    /// Update (overwrite) an application.
+    ///
+    /// The application must exist, otherwise `false` is returned.
+    pub async fn update_app(
+        &self,
+        application: Application,
+        context: Context,
+    ) -> ClientResult<bool> {
+        let req = self
+            .client
+            .post(self.url(&application.metadata.name, None)?)
+            .json(&application)
+            .inject_token(&self.token_provider, context)
+            .await?;
+
+        Self::update_response(req.send().await?).await
+    }
+
+    /// Update (overwrite) a device.
+    ///
+    /// The application must exist, otherwise `false` is returned.
+    pub async fn update_device(&self, device: Device, context: Context) -> ClientResult<bool> {
+        let req = self
+            .client
+            .post(self.url(&device.metadata.application, Some(&device.metadata.name))?)
+            .json(&device)
+            .inject_token(&self.token_provider, context)
+            .await?;
+
+        Self::update_response(req.send().await?).await
+    }
+
+    async fn update_response(response: Response) -> ClientResult<bool> {
+        log::debug!("Eval update response: {:#?}", response);
+        match response.status() {
+            StatusCode::OK => Ok(true),
+            StatusCode::NOT_FOUND => Ok(false),
+            _ => Self::default_response(response).await,
+        }
+    }
+
+    async fn default_response<T>(response: Response) -> ClientResult<T> {
+        match response.status() {
+            code if code.is_client_error() => Err(ClientError::Service(response.json().await?)),
             code => Err(ClientError::Request(format!("Unexpected code {:?}", code))),
         }
     }
