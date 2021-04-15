@@ -12,7 +12,7 @@ pub struct ErrorInformation {
 #[derive(thiserror::Error, Debug)]
 pub enum ClientError<E>
 where
-    E: std::error::Error + 'static,
+    E: std::error::Error + Send + Sync + 'static,
 {
     /// An error from the underlying API client (e.g. reqwest).
     #[error("client error: {0}")]
@@ -25,10 +25,13 @@ where
     Service(ErrorInformation),
     /// A token provider error.
     #[error("token error: {0}")]
-    Token(#[source] Box<dyn std::error::Error>),
+    Token(#[source] Box<dyn std::error::Error + Send + Sync>),
     /// Url error.
     #[error("Url parse error")]
     Url(#[from] ParseError),
+    /// Syntax error.
+    #[error("Syntax error: {0}")]
+    Syntax(#[from] serde_json::error::Error),
 }
 
 #[cfg(feature = "reqwest")]

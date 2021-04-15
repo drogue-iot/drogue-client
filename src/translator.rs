@@ -40,6 +40,13 @@ pub trait Translator {
 
         result
     }
+
+    fn attribute<A>(&self) -> A::Output
+    where
+        A: Attribute,
+    {
+        A::extract(self.section::<A::Dialect>())
+    }
 }
 
 #[derive(Eq, PartialEq, Clone, Copy, Debug)]
@@ -53,10 +60,40 @@ pub trait Dialect {
     fn section() -> Section;
 }
 
+pub trait Attribute {
+    type Dialect: for<'de> Deserialize<'de> + Dialect;
+    type Output;
+
+    fn extract(dialect: Option<Result<Self::Dialect, serde_json::Error>>) -> Self::Output;
+}
+
+// attribute!(pub DeviceCore [ Name : bool ] => |v| match v {
+//   Some(Ok(v)) => v,
+//   Some(Err(_)) => false,
+//   None => true,
+// })
+#[macro_export]
+macro_rules! attribute {
+    ($v:vis $dialect:ty [$name:ident : $output:ty] => | $value:ident | $($code:tt)* ) => {
+        $v struct $name;
+
+        impl $crate::Attribute for $name {
+            type Dialect = $dialect;
+            type Output = $output;
+
+            fn extract(dialect: Option<Result<Self::Dialect, serde_json::Error>>) -> Self::Output {
+                let $value = dialect;
+                $($code)*
+            }
+        }
+    };
+}
+
 #[cfg(test)]
 mod test {
 
     use super::*;
+    use serde_json::Error;
 
     #[derive(Deserialize, Debug, Clone, Default)]
     pub struct Foo {
@@ -89,9 +126,29 @@ mod test {
         }
     }
 
+    pub struct Name {}
+
+    impl Attribute for Name {
+        type Dialect = Bar;
+        type Output = String;
+
+        fn extract(dialect: Option<Result<Self::Dialect, Error>>) -> Self::Output {
+            dialect
+                .and_then(|d| d.map(|d| d.name).ok())
+                .unwrap_or_default()
+        }
+    }
+
     #[test]
     fn test1() {
         let i = Foo::default();
         let _: Option<Result<Bar, _>> = i.section::<Bar>();
+    }
+
+    #[test]
+    fn test_attr() {
+        let i = Foo::default();
+        let name: String = i.attribute::<Name>();
+        assert_eq!("name", "");
     }
 }

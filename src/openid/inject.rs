@@ -1,30 +1,29 @@
 use crate::{context::Context, error::ClientError, openid::OpenIdTokenProvider};
 use async_trait::async_trait;
-use reqwest::RequestBuilder;
 
 #[async_trait]
-pub trait TokenInjector {
+pub trait TokenInjector: Sized {
     async fn inject_token(
-        &self,
-        builder: RequestBuilder,
+        self,
+        token_provider: &Option<OpenIdTokenProvider>,
         context: Context,
-    ) -> Result<RequestBuilder, ClientError<reqwest::Error>>;
+    ) -> Result<Self, ClientError<reqwest::Error>>;
 }
 
 #[async_trait]
-impl TokenInjector for Option<OpenIdTokenProvider> {
+impl TokenInjector for reqwest::RequestBuilder {
     async fn inject_token(
-        &self,
-        builder: RequestBuilder,
+        self,
+        token_provider: &Option<OpenIdTokenProvider>,
         context: Context,
-    ) -> Result<RequestBuilder, ClientError<reqwest::Error>> {
+    ) -> Result<Self, ClientError<reqwest::Error>> {
         if let Some(token) = context.provided_token {
-            Ok(builder.bearer_auth(token))
-        } else if let Some(provider) = self {
+            Ok(self.bearer_auth(token))
+        } else if let Some(provider) = token_provider {
             let token = provider.provide_access_token().await?;
-            Ok(builder.bearer_auth(token))
+            Ok(self.bearer_auth(token))
         } else {
-            Ok(builder)
+            Ok(self)
         }
     }
 }

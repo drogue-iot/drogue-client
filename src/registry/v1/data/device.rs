@@ -1,6 +1,4 @@
-use crate::meta::v1::ScopedMetadata;
-use crate::serde::is_default;
-use crate::{Dialect, Section, Translator};
+use crate::{attribute, meta::v1::ScopedMetadata, serde::is_default, Dialect, Section, Translator};
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 
@@ -25,12 +23,51 @@ impl Translator for Device {
     }
 }
 
+impl Device {
+    /// Validate if a device is enabled
+    pub fn validate_device(&self) -> bool {
+        match self.section::<DeviceSpecCore>() {
+            // found "core", decoded successfully -> check
+            Some(Ok(core)) => {
+                if core.disabled {
+                    return false;
+                }
+            }
+            // found "core", but could not decode -> fail
+            Some(Err(_)) => {
+                return false;
+            }
+            // no "core" section
+            _ => {}
+        };
+
+        // done
+        true
+    }
+}
+
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct DeviceSpecCore {
     #[serde(default)]
     #[serde(skip_serializing_if = "is_default")]
     pub disabled: bool,
 }
+
+attribute!(pub DeviceSpecCore[DeviceEnabled:bool] => |core| match core {
+    Some(Ok(core)) => core.disabled,
+    // failed to decode
+    Some(Err(_)) => false,
+    // no "core" section
+    None => true,
+});
+attribute!(pub DeviceSpecCommands[Commands:Vec<Command>] => |commands| match commands {
+    Some(Ok(commands)) => commands.commands.clone(),
+    _ => vec![],
+});
+attribute!(pub DeviceSpecCommands[FirstCommand:Option<Command>] => |commands| match commands {
+    Some(Ok(commands)) => commands.commands.get(0).cloned(),
+    _ => None,
+});
 
 impl Dialect for DeviceSpecCore {
     fn key() -> &'static str {
