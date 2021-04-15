@@ -20,7 +20,7 @@ thiserror = "1"
 
 reqwest = { version = "0.11", optional = true }
 
-openid = "0.9"
+openid = "0.9.1"
 url = "2"
 
 chrono = "0.4"
@@ -33,6 +33,3 @@ base64 = "0.13"
 [features]
 default = ["with_reqwest"]
 with_reqwest = ["reqwest"]
-
-[patch.crates-io]
-openid = { git = "https://github.com/ctron/openid", rev = "c75d26435bf829f22068fd0fd90ee191ffc07e76" }

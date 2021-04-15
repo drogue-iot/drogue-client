@@ -149,6 +149,6 @@ mod test {
     fn test_attr() {
         let i = Foo::default();
         let name: String = i.attribute::<Name>();
-        assert_eq!("name", "");
+        assert_eq!(name, "");
     }
 }
