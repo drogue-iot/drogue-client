@@ -33,3 +33,6 @@ base64 = "0.13"
 [features]
 default = ["with_reqwest"]
 with_reqwest = ["reqwest"]
+
+[dev-dependencies]
+anyhow = "1"

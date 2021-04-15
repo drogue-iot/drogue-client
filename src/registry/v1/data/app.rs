@@ -5,6 +5,7 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 
+/// An application.
 #[derive(Clone, Default, Debug, Deserialize, Serialize)]
 pub struct Application {
     pub metadata: NonScopedMetadata,
@@ -26,6 +27,7 @@ impl Translator for Application {
     }
 }
 
+/// The application's trust-anchors.
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct ApplicationSpecTrustAnchors {
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -42,12 +44,14 @@ impl Dialect for ApplicationSpecTrustAnchors {
     }
 }
 
+/// A single trust-anchor entry.
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct ApplicationSpecTrustAnchorEntry {
     #[serde(with = "Base64Standard")]
     pub certificate: Vec<u8>,
 }
 
+/// The status of the trust-anchors.
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct ApplicationStatusTrustAnchors {
     pub anchors: Vec<ApplicationStatusTrustAnchorEntry>,
@@ -63,6 +67,7 @@ impl Dialect for ApplicationStatusTrustAnchors {
     }
 }
 
+/// A single trust-anchor status.
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub enum ApplicationStatusTrustAnchorEntry {

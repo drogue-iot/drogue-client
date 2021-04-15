@@ -23,10 +23,12 @@ fn epoch() -> DateTime<Utc> {
     Utc.timestamp_millis(0)
 }
 
+/// Non-scoped metadata.
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
 pub struct NonScopedMetadata {
+    /// The unique name of this resource.
     pub name: String,
 
     #[serde(default)]
@@ -59,11 +61,14 @@ pub struct NonScopedMetadata {
     pub annotations: HashMap<String, String>,
 }
 
+/// Application-scoped metadata.
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
 pub struct ScopedMetadata {
+    /// The application this resource is scoped by.
     pub application: String,
+    /// The unique name of this resource.
     pub name: String,
 
     #[serde(default)]

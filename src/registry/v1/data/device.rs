@@ -78,6 +78,7 @@ impl Dialect for DeviceSpecCore {
     }
 }
 
+/// Configured device credentials.
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct DeviceSpecCredentials {
     #[serde(default)]
@@ -94,6 +95,7 @@ impl Dialect for DeviceSpecCredentials {
     }
 }
 
+/// A single credential entry.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum Credential {
     #[serde(rename = "user")]

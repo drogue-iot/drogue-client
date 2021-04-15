@@ -2,9 +2,12 @@ use serde::{Deserialize, Serialize};
 use std::fmt;
 use url::ParseError;
 
+/// Additional error information.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ErrorInformation {
+    /// A machine processable error type.
     pub error: String,
+    /// A human readable error message.
     #[serde(default)]
     pub message: String,
 }

@@ -1,6 +1,7 @@
 use crate::{context::Context, error::ClientError, openid::OpenIdTokenProvider};
 use async_trait::async_trait;
 
+/// Allows injecting tokens.
 #[async_trait]
 pub trait TokenInjector: Sized {
     async fn inject_token(
@@ -10,6 +11,7 @@ pub trait TokenInjector: Sized {
     ) -> Result<Self, ClientError<reqwest::Error>>;
 }
 
+/// Injects tokens into a request by setting the authorization header to a "bearer" token.
 #[async_trait]
 impl TokenInjector for reqwest::RequestBuilder {
     async fn inject_token(

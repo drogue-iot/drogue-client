@@ -1,3 +1,5 @@
+//! OpenID connect integrations and helpers.
+
 #[cfg(feature = "with_reqwest")]
 mod inject;
 mod provider;
@@ -8,6 +10,7 @@ pub use provider::*;
 
 use chrono::{DateTime, Utc};
 
+/// Check if something expired or expires soon.
 pub trait Expires {
     /// Check if the resources expires before the duration elapsed.
     fn expires_before(&self, duration: chrono::Duration) -> bool {

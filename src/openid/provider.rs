@@ -1,9 +1,9 @@
-use crate::{error::ClientError, openid::Expires};
+use crate::openid::Expires;
 use async_std::sync::RwLock;
 use core::fmt::{self, Debug, Formatter};
 use std::{ops::Deref, sync::Arc};
 
-/// A provider which provides access tokens for services.
+/// A provider which provides access tokens for clients.
 #[derive(Clone)]
 pub struct OpenIdTokenProvider {
     pub client: Arc<openid::Client>,
@@ -49,11 +49,14 @@ impl OpenIdTokenProvider {
         self.fetch_fresh_token().await
     }
 
-    pub async fn provide_access_token(&self) -> Result<String, ClientError<reqwest::Error>> {
+    #[cfg(feature = "with_reqwest")]
+    pub async fn provide_access_token(
+        &self,
+    ) -> Result<String, crate::error::ClientError<reqwest::Error>> {
         self.provide_token()
             .await
             .map(|token| token.access_token)
-            .map_err(|err| ClientError::Token(Box::new(err)))
+            .map_err(|err| crate::error::ClientError::Token(Box::new(err)))
     }
 
     async fn fetch_fresh_token(&self) -> Result<openid::Bearer, openid::error::Error> {

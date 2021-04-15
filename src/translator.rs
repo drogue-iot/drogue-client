@@ -1,6 +1,7 @@
 use serde::Deserialize;
 use serde_json::{Map, Value};
 
+/// A translator for the data sections of a resource.
 pub trait Translator {
     fn spec(&self) -> &Map<String, Value>;
     fn status(&self) -> &Map<String, Value>;
@@ -49,17 +50,20 @@ pub trait Translator {
     }
 }
 
+/// An enum of main data sections.
 #[derive(Eq, PartialEq, Clone, Copy, Debug)]
 pub enum Section {
     Spec,
     Status,
 }
 
+/// A "dialect", of strongly types main sections.
 pub trait Dialect {
     fn key() -> &'static str;
     fn section() -> Section;
 }
 
+/// A specific attribute of a dialected section.
 pub trait Attribute {
     type Dialect: for<'de> Deserialize<'de> + Dialect;
     type Output;
@@ -67,11 +71,6 @@ pub trait Attribute {
     fn extract(dialect: Option<Result<Self::Dialect, serde_json::Error>>) -> Self::Output;
 }
 
-// attribute!(pub DeviceCore [ Name : bool ] => |v| match v {
-//   Some(Ok(v)) => v,
-//   Some(Err(_)) => false,
-//   None => true,
-// })
 #[macro_export]
 macro_rules! attribute {
     ($v:vis $dialect:ty [$name:ident : $output:ty] => | $value:ident | $($code:tt)* ) => {
