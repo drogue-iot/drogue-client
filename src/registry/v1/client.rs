@@ -57,11 +57,14 @@ impl Client {
     ///
     /// If the user does not have access to the application, the server side may return "not found"
     /// as a response instead of "forbidden".
-    pub async fn get_app(
+    pub async fn get_app<S1>(
         &self,
-        application: &str,
+        application: S1,
         context: Context,
-    ) -> ClientResult<Option<Application>> {
+    ) -> ClientResult<Option<Application>>
+    where
+        S1: AsRef<str>,
+    {
         let req = self
             .client
             .get(self.url(application.as_ref(), None)?)
