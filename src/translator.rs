@@ -1,10 +1,13 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 
 /// A translator for the data sections of a resource.
 pub trait Translator {
     fn spec(&self) -> &Map<String, Value>;
     fn status(&self) -> &Map<String, Value>;
+
+    fn spec_mut(&mut self) -> &mut Map<String, Value>;
+    fn status_mut(&mut self) -> &mut Map<String, Value>;
 
     fn section<D>(&self) -> Option<Result<D, serde_json::Error>>
     where
@@ -14,6 +17,20 @@ pub trait Translator {
             Section::Spec => self.spec_for(D::key()),
             Section::Status => self.status_for(D::key()),
         }
+    }
+
+    fn set_section<D>(&mut self, d: D) -> Result<(), serde_json::Error>
+    where
+        D: Serialize + Dialect,
+    {
+        let v = serde_json::to_value(d)?;
+
+        match D::section() {
+            Section::Spec => self.spec_mut().insert(D::key().to_string(), v),
+            Section::Status => self.status_mut().insert(D::key().to_string(), v),
+        };
+
+        Ok(())
     }
 
     fn spec_for<T, S>(&self, key: S) -> Option<Result<T, serde_json::Error>>
@@ -88,6 +105,29 @@ macro_rules! attribute {
     };
 }
 
+#[macro_export]
+macro_rules! translator {
+    ($name:ty) => {
+        impl Translator for $name {
+            fn spec(&self) -> &Map<String, Value> {
+                &self.spec
+            }
+
+            fn status(&self) -> &Map<String, Value> {
+                &self.status
+            }
+
+            fn spec_mut(&mut self) -> &mut Map<String, Value> {
+                &mut self.spec
+            }
+
+            fn status_mut(&mut self) -> &mut Map<String, Value> {
+                &mut self.status
+            }
+        }
+    };
+}
+
 #[cfg(test)]
 mod test {
 
@@ -100,15 +140,7 @@ mod test {
         pub status: Map<String, Value>,
     }
 
-    impl Translator for Foo {
-        fn spec(&self) -> &Map<String, Value> {
-            &self.spec
-        }
-
-        fn status(&self) -> &Map<String, Value> {
-            &self.status
-        }
-    }
+    translator!(Foo);
 
     #[derive(Deserialize, Debug, Clone, Default)]
     pub struct Bar {

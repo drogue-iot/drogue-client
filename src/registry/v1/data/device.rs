@@ -1,4 +1,7 @@
-use crate::{attribute, meta::v1::ScopedMetadata, serde::is_default, Dialect, Section, Translator};
+use crate::{
+    attribute, meta::v1::ScopedMetadata, serde::is_default, translator, Dialect, Section,
+    Translator,
+};
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 
@@ -13,15 +16,7 @@ pub struct Device {
     pub status: Map<String, Value>,
 }
 
-impl Translator for Device {
-    fn spec(&self) -> &Map<String, Value> {
-        &self.spec
-    }
-
-    fn status(&self) -> &Map<String, Value> {
-        &self.status
-    }
-}
+translator!(Device);
 
 impl Device {
     /// Validate if a device is enabled

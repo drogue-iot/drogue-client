@@ -1,6 +1,6 @@
-use crate::meta::v1::NonScopedMetadata;
-use crate::serde::Base64Standard;
-use crate::{Dialect, Section, Translator};
+use crate::{
+    meta::v1::NonScopedMetadata, serde::Base64Standard, translator, Dialect, Section, Translator,
+};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
@@ -17,15 +17,7 @@ pub struct Application {
     pub status: Map<String, Value>,
 }
 
-impl Translator for Application {
-    fn spec(&self) -> &Map<String, Value> {
-        &self.spec
-    }
-
-    fn status(&self) -> &Map<String, Value> {
-        &self.status
-    }
-}
+translator!(Application);
 
 /// The application's trust-anchors.
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
