@@ -35,4 +35,4 @@ default = ["with_reqwest"]
 with_reqwest = ["reqwest"]
 
 [patch.crates-io]
-openid = { path = "../openid" }
+openid = { git = "https://github.com/ctron/openid", rev = "c75d26435bf829f22068fd0fd90ee191ffc07e76" }
