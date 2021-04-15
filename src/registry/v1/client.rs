@@ -4,7 +4,8 @@ use crate::{
     openid::{OpenIdTokenProvider, TokenInjector},
     Context,
 };
-use reqwest::StatusCode;
+use reqwest::{Response, StatusCode};
+use serde::de::DeserializeOwned;
 use url::Url;
 
 /// A device registry client, backed by reqwest.
@@ -60,22 +61,14 @@ impl Client {
         &self,
         application: &str,
         context: Context,
-    ) -> ClientResult<Option<Device>> {
+    ) -> ClientResult<Option<Application>> {
         let req = self
             .client
             .get(self.url(application.as_ref(), None)?)
             .inject_token(&self.token_provider, context)
             .await?;
 
-        let response = req.send().await?;
-
-        log::debug!("Response: {:#?}", response);
-
-        match response.status() {
-            StatusCode::OK => Ok(Some(response.json().await?)),
-            StatusCode::NOT_FOUND => Ok(None),
-            code => Err(ClientError::Request(format!("Unexpected code {:?}", code))),
-        }
+        Self::get_response(req.send().await?).await
     }
 
     /// Get a device by name, returning the raw JSON.
@@ -101,10 +94,11 @@ impl Client {
             .inject_token(&self.token_provider, context)
             .await?;
 
-        let response = req.send().await?;
+        Self::get_response(req.send().await?).await
+    }
 
+    async fn get_response<T: DeserializeOwned>(response: Response) -> ClientResult<Option<T>> {
         log::debug!("Response: {:#?}", response);
-
         match response.status() {
             StatusCode::OK => Ok(Some(response.json().await?)),
             StatusCode::NOT_FOUND => Ok(None),
