@@ -33,6 +33,23 @@ pub trait Translator {
         Ok(())
     }
 
+    fn update_section<D, F>(&mut self, f: F) -> Result<(), serde_json::Error>
+    where
+        D: Serialize + for<'de> Deserialize<'de> + Dialect + Default,
+        F: FnOnce(D) -> D,
+    {
+        let s = match self.section::<D>() {
+            Some(Ok(s)) => f(s),
+            None => {
+                let s = D::default();
+                f(s)
+            }
+            Some(Err(err)) => Err(err)?,
+        };
+
+        self.set_section(s)
+    }
+
     fn spec_for<T, S>(&self, key: S) -> Option<Result<T, serde_json::Error>>
     where
         T: for<'de> Deserialize<'de>,
