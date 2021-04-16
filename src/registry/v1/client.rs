@@ -150,6 +150,38 @@ impl Client {
         }
     }
 
+    /// Create a new application.
+    pub async fn create_app(&self, app: Application, context: Context) -> ClientResult<()> {
+        let req = self
+            .client
+            .post(self.url(&app.metadata.name, None)?)
+            .json(&app)
+            .inject_token(&self.token_provider, context)
+            .await?;
+
+        Self::create_response(req.send().await?).await
+    }
+
+    /// Create a new device.
+    pub async fn create_device(&self, device: Device, context: Context) -> ClientResult<()> {
+        let req = self
+            .client
+            .post(self.url(&device.metadata.application, Some(&device.metadata.name))?)
+            .json(&device)
+            .inject_token(&self.token_provider, context)
+            .await?;
+
+        Self::create_response(req.send().await?).await
+    }
+
+    async fn create_response(response: Response) -> ClientResult<()> {
+        log::debug!("Eval create response: {:#?}", response);
+        match response.status() {
+            StatusCode::CREATED => Ok(()),
+            _ => Self::default_response(response).await,
+        }
+    }
+
     async fn default_response<T>(response: Response) -> ClientResult<T> {
         match response.status() {
             code if code.is_client_error() => Err(ClientError::Service(response.json().await?)),
