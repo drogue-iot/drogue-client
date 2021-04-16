@@ -133,7 +133,7 @@ impl Client {
     pub async fn update_device(&self, device: Device, context: Context) -> ClientResult<bool> {
         let req = self
             .client
-            .post(self.url(&device.metadata.application, Some(&device.metadata.name))?)
+            .put(self.url(&device.metadata.application, Some(&device.metadata.name))?)
             .json(&device)
             .inject_token(&self.token_provider, context)
             .await?;
