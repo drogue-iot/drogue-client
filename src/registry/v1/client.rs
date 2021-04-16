@@ -119,7 +119,7 @@ impl Client {
     ) -> ClientResult<bool> {
         let req = self
             .client
-            .post(self.url(&application.metadata.name, None)?)
+            .put(self.url(&application.metadata.name, None)?)
             .json(&application)
             .inject_token(&self.token_provider, context)
             .await?;
