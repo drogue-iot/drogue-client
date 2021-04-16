@@ -40,10 +40,16 @@ impl Client {
                 .path_segments_mut()
                 .map_err(|_| ClientError::Request("Failed to get paths".into()))?;
 
-            path.extend(&["api", "v1", "apps", application]);
+            path.extend(&["api", "v1", "apps"]);
+            if !application.is_empty() {
+                path.push(application);
+            }
 
             if let Some(device) = device {
-                path.extend(&["devices", device]);
+                path.push("devices");
+                if !device.is_empty() {
+                    path.push(device);
+                }
             }
         }
 
@@ -154,7 +160,7 @@ impl Client {
     pub async fn create_app(&self, app: Application, context: Context) -> ClientResult<()> {
         let req = self
             .client
-            .post(self.url(&app.metadata.name, None)?)
+            .post(self.url("", None)?)
             .json(&app)
             .inject_token(&self.token_provider, context)
             .await?;
@@ -166,7 +172,7 @@ impl Client {
     pub async fn create_device(&self, device: Device, context: Context) -> ClientResult<()> {
         let req = self
             .client
-            .post(self.url(&device.metadata.application, Some(&device.metadata.name))?)
+            .post(self.url(&device.metadata.application, Some(""))?)
             .json(&device)
             .inject_token(&self.token_provider, context)
             .await?;
