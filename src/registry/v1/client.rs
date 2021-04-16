@@ -150,7 +150,7 @@ impl Client {
     async fn update_response(response: Response) -> ClientResult<bool> {
         log::debug!("Eval update response: {:#?}", response);
         match response.status() {
-            StatusCode::OK => Ok(true),
+            StatusCode::OK | StatusCode::NO_CONTENT => Ok(true),
             StatusCode::NOT_FOUND => Ok(false),
             _ => Self::default_response(response).await,
         }
