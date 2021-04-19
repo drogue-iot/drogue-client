@@ -129,3 +129,118 @@ impl Default for NonScopedMetadata {
         }
     }
 }
+
+pub trait CommonMetadata {
+    fn name(&self) -> &String;
+    fn uid(&self) -> &String;
+    fn labels(&self) -> &HashMap<String, String>;
+    fn annotations(&self) -> &HashMap<String, String>;
+    fn creation_timestamp(&self) -> &DateTime<chrono::Utc>;
+    fn resource_version(&self) -> &String;
+    fn generation(&self) -> u64;
+    fn deletion_timestamp(&self) -> &Option<DateTime<chrono::Utc>>;
+    fn finalizers(&self) -> &Vec<String>;
+}
+
+pub trait CommonMetadataMut: CommonMetadata {
+    fn set_name(&mut self, name: String);
+    fn set_uid(&mut self, uid: String);
+    fn set_labels(&mut self, labels: HashMap<String, String>);
+    fn set_annotations(&mut self, annotations: HashMap<String, String>);
+    fn set_creation_timestamp(&mut self, creation_timestamp: DateTime<Utc>);
+    fn set_resource_version(&mut self, resource_version: String);
+    fn set_generation(&mut self, generation: u64);
+    fn set_deletion_timestamp(&mut self, deletion_timestamp: Option<DateTime<Utc>>);
+    fn set_finalizers(&mut self, finalizers: Vec<String>);
+}
+
+macro_rules! common_metadata {
+    ($name:ty) => {
+        impl CommonMetadata for $name {
+            fn name(&self) -> &String {
+                &self.name
+            }
+            fn uid(&self) -> &String {
+                &self.uid
+            }
+            fn labels(&self) -> &HashMap<String, String> {
+                &self.labels
+            }
+            fn annotations(&self) -> &HashMap<String, String> {
+                &self.annotations
+            }
+            fn creation_timestamp(&self) -> &DateTime<chrono::Utc> {
+                &self.creation_timestamp
+            }
+            fn resource_version(&self) -> &String {
+                &self.resource_version
+            }
+            fn generation(&self) -> u64 {
+                self.generation
+            }
+            fn deletion_timestamp(&self) -> &Option<DateTime<chrono::Utc>> {
+                &self.deletion_timestamp
+            }
+            fn finalizers(&self) -> &Vec<String> {
+                &self.finalizers
+            }
+        }
+
+        impl CommonMetadataMut for $name {
+            fn set_name(&mut self, name: String) {
+                self.name = name;
+            }
+            fn set_uid(&mut self, uid: String) {
+                self.uid = uid;
+            }
+            fn set_labels(&mut self, labels: HashMap<String, String>) {
+                self.labels = labels;
+            }
+            fn set_annotations(&mut self, annotations: HashMap<String, String>) {
+                self.annotations = annotations;
+            }
+            fn set_creation_timestamp(&mut self, creation_timestamp: DateTime<Utc>) {
+                self.creation_timestamp = creation_timestamp;
+            }
+            fn set_resource_version(&mut self, resource_version: String) {
+                self.resource_version = resource_version;
+            }
+            fn set_generation(&mut self, generation: u64) {
+                self.generation = generation;
+            }
+            fn set_deletion_timestamp(&mut self, deletion_timestamp: Option<DateTime<Utc>>) {
+                self.deletion_timestamp = deletion_timestamp;
+            }
+            fn set_finalizers(&mut self, finalizers: Vec<String>) {
+                self.finalizers = finalizers;
+            }
+        }
+    };
+}
+
+common_metadata!(ScopedMetadata);
+common_metadata!(NonScopedMetadata);
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_set() {
+        let mut meta = ScopedMetadata::default();
+        let meta_ref: &mut dyn CommonMetadataMut = &mut meta;
+
+        let ts = Utc::now();
+        let mut labels = HashMap::new();
+        labels.insert("foo".to_string(), "bar".to_string());
+
+        // meta_ref.set_name("foo".into());
+        meta_ref.set_name("foo".into());
+        meta_ref.set_deletion_timestamp(Some(ts.clone()));
+        meta_ref.set_labels(labels.clone());
+
+        assert_eq!(meta.name, "foo");
+        assert_eq!(meta.deletion_timestamp, Some(ts));
+        assert_eq!(meta.labels, labels);
+    }
+}

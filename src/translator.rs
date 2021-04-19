@@ -97,6 +97,31 @@ pub trait Dialect {
     fn section() -> Section;
 }
 
+/// Implements the [`Dialect`] trait a structure.
+///
+/// ```rust
+/// use drogue_client::{dialect, Dialect, Section};
+///
+/// pub struct FooSpec {
+/// }
+///
+/// dialect!(FooSpec[Section::Spec => "foo"]);
+/// ```
+#[macro_export]
+macro_rules! dialect {
+    ($dialect:ty [ $section:expr => $key:literal ]) => {
+        impl Dialect for $dialect {
+            fn key() -> &'static str {
+                $key
+            }
+
+            fn section() -> Section {
+                $section
+            }
+        }
+    };
+}
+
 /// A specific attribute of a dialected section.
 pub trait Attribute {
     type Dialect: for<'de> Deserialize<'de> + Dialect;
