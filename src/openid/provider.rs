@@ -49,7 +49,7 @@ impl OpenIdTokenProvider {
         self.fetch_fresh_token().await
     }
 
-    #[cfg(feature = "with_reqwest")]
+    #[cfg(feature = "reqwest")]
     pub async fn provide_access_token(
         &self,
     ) -> Result<String, crate::error::ClientError<reqwest::Error>> {

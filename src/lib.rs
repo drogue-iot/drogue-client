@@ -2,6 +2,7 @@
 
 pub mod error;
 pub mod meta;
+#[cfg(feature = "openid")]
 pub mod openid;
 pub mod registry;
 

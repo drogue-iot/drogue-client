@@ -1,10 +1,10 @@
 //! OpenID connect integrations and helpers.
 
-#[cfg(feature = "with_reqwest")]
+#[cfg(feature = "reqwest")]
 mod inject;
 mod provider;
 
-#[cfg(feature = "with_reqwest")]
+#[cfg(feature = "reqwest")]
 pub use inject::*;
 pub use provider::*;
 
