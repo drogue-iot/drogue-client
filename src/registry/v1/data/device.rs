@@ -5,7 +5,7 @@ use crate::{
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Eq, PartialEq)]
 pub struct Device {
     pub metadata: ScopedMetadata,
     #[serde(default)]
@@ -41,7 +41,7 @@ impl Device {
     }
 }
 
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Eq, PartialEq)]
 pub struct DeviceSpecCore {
     #[serde(default)]
     #[serde(skip_serializing_if = "is_default")]
@@ -74,7 +74,7 @@ impl Dialect for DeviceSpecCore {
 }
 
 /// Configured device credentials.
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Eq, PartialEq)]
 pub struct DeviceSpecCredentials {
     #[serde(default)]
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -91,7 +91,7 @@ impl Dialect for DeviceSpecCredentials {
 }
 
 /// A single credential entry.
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
 pub enum Credential {
     #[serde(rename = "user")]
     UsernamePassword {
@@ -106,7 +106,7 @@ pub enum Credential {
     Certificate(String),
 }
 
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Eq, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct DeviceSpecGatewaySelector {
     #[serde(default)]
@@ -123,7 +123,7 @@ impl Dialect for DeviceSpecGatewaySelector {
     }
 }
 
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Eq, PartialEq)]
 pub struct DeviceSpecCommands {
     #[serde(default)]
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -139,13 +139,13 @@ impl Dialect for DeviceSpecCommands {
     }
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
 pub enum Command {
     #[serde(rename = "external")]
     External(ExternalEndpoint),
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
 pub struct ExternalEndpoint {
     pub endpoint: String,
     pub r#type: Option<String>,

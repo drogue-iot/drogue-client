@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 
 /// An application.
-#[derive(Clone, Default, Debug, Deserialize, Serialize)]
+#[derive(Clone, Default, Debug, Deserialize, Serialize, Eq, PartialEq)]
 pub struct Application {
     pub metadata: NonScopedMetadata,
     #[serde(default)]
@@ -20,7 +20,7 @@ pub struct Application {
 translator!(Application);
 
 /// The application's trust-anchors.
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Eq, PartialEq)]
 pub struct ApplicationSpecTrustAnchors {
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub anchors: Vec<ApplicationSpecTrustAnchorEntry>,
@@ -37,14 +37,14 @@ impl Dialect for ApplicationSpecTrustAnchors {
 }
 
 /// A single trust-anchor entry.
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Eq, PartialEq)]
 pub struct ApplicationSpecTrustAnchorEntry {
     #[serde(with = "Base64Standard")]
     pub certificate: Vec<u8>,
 }
 
 /// The status of the trust-anchors.
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Eq, PartialEq)]
 pub struct ApplicationStatusTrustAnchors {
     pub anchors: Vec<ApplicationStatusTrustAnchorEntry>,
 }
@@ -60,7 +60,7 @@ impl Dialect for ApplicationStatusTrustAnchors {
 }
 
 /// A single trust-anchor status.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, Eq, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub enum ApplicationStatusTrustAnchorEntry {
     #[serde(rename_all = "camelCase")]

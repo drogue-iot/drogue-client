@@ -24,7 +24,7 @@ fn epoch() -> DateTime<Utc> {
 }
 
 /// Non-scoped metadata.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, Eq, PartialEq)]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
 pub struct NonScopedMetadata {
@@ -62,7 +62,7 @@ pub struct NonScopedMetadata {
 }
 
 /// Application-scoped metadata.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, Eq, PartialEq)]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
 pub struct ScopedMetadata {
