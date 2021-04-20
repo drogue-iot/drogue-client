@@ -97,7 +97,7 @@ pub trait Dialect {
     fn section() -> Section;
 }
 
-/// Implements the [`Dialect`] trait a structure.
+/// Implements the [`Dialect`] trait for a structure.
 ///
 /// ```rust
 /// use drogue_client::{dialect, Dialect, Section};

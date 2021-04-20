@@ -130,6 +130,7 @@ impl Default for NonScopedMetadata {
     }
 }
 
+/// A trait for immutable access to the common parts of the metadata structures.
 pub trait CommonMetadata {
     fn name(&self) -> &String;
     fn uid(&self) -> &String;
@@ -142,6 +143,7 @@ pub trait CommonMetadata {
     fn finalizers(&self) -> &Vec<String>;
 }
 
+/// A trait for mutable access to the common parts of the metadata structures.
 pub trait CommonMetadataMut: CommonMetadata {
     fn set_name(&mut self, name: String);
     fn set_uid(&mut self, uid: String);
