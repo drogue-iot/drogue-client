@@ -2,8 +2,9 @@ use super::data::*;
 use crate::{
     error::ClientError,
     openid::{OpenIdTokenProvider, TokenInjector},
-    Context,
+    Context, Translator,
 };
+use futures::{stream, StreamExt, TryStreamExt};
 use reqwest::{Response, StatusCode};
 use serde::de::DeserializeOwned;
 use url::Url;
@@ -56,20 +57,20 @@ impl Client {
         Ok(url)
     }
 
-    /// Get an application by name, returning the raw JSON.
+    /// Get an application by name.
     ///
     /// If the application do not exist, this function will return `None`, otherwise
     /// if will return the device information.
     ///
     /// If the user does not have access to the application, the server side may return "not found"
     /// as a response instead of "forbidden".
-    pub async fn get_app<S1>(
+    pub async fn get_app<A>(
         &self,
-        application: S1,
+        application: A,
         context: Context,
     ) -> ClientResult<Option<Application>>
     where
-        S1: AsRef<str>,
+        A: AsRef<str>,
     {
         let req = self
             .client
@@ -80,22 +81,22 @@ impl Client {
         Self::get_response(req.send().await?).await
     }
 
-    /// Get a device by name, returning the raw JSON.
+    /// Get a device by name.
     ///
     /// If the application or device do not exist, this function will return `None`, otherwise
     /// if will return the device information.
     ///
     /// If the user does not have access to the application, the server side may return "not found"
     /// as a response instead of "forbidden".
-    pub async fn get_device<S1, S2>(
+    pub async fn get_device<A, D>(
         &self,
-        application: S1,
-        device: S2,
+        application: A,
+        device: D,
         context: Context,
     ) -> ClientResult<Option<Device>>
     where
-        S1: AsRef<str>,
-        S2: AsRef<str>,
+        A: AsRef<str>,
+        D: AsRef<str>,
     {
         let req = self
             .client
@@ -104,6 +105,66 @@ impl Client {
             .await?;
 
         Self::get_response(req.send().await?).await
+    }
+
+    /// Get a list of devices.
+    ///
+    /// The function will only return devices that could be found.
+    pub async fn get_devices<A, D>(
+        &self,
+        application: A,
+        devices: &[D],
+        context: Context,
+    ) -> ClientResult<Vec<Device>>
+    where
+        A: AsRef<str>,
+        D: AsRef<str>,
+    {
+        Ok(stream::iter(devices)
+            .then(|device| self.get_device(application.as_ref(), device, context.clone()))
+            // filter out missing devices
+            .filter_map(|device| async { device.transpose() })
+            // collect to a map
+            .try_collect()
+            .await?)
+    }
+
+    /// Get a device by name, resolving all first level gateways.
+    pub async fn get_devices_and_gateways<A, D>(
+        &self,
+        application: A,
+        device: D,
+        context: Context,
+    ) -> ClientResult<Option<(Device, Vec<Device>)>>
+    where
+        A: AsRef<str>,
+        D: AsRef<str>,
+    {
+        let req = self
+            .client
+            .get(self.url(application.as_ref(), Some(device.as_ref()))?)
+            .inject_token(&self.token_provider, context.clone())
+            .await?;
+
+        let device: Option<Device> = Self::get_response(req.send().await?).await?;
+
+        if let Some(device) = device {
+            let gateways = if let Some(gw_sel) = device
+                .section::<DeviceSpecGatewaySelector>()
+                .and_then(|s| s.ok())
+            {
+                // lookup devices
+                self.get_devices(application, &gw_sel.match_names, context)
+                    .await?
+            } else {
+                // unable to process gateways or no gateways configured
+                vec![]
+            };
+
+            Ok(Some((device, gateways)))
+        } else {
+            Ok(None)
+        }
     }
 
     async fn get_response<T: DeserializeOwned>(response: Response) -> ClientResult<Option<T>> {
