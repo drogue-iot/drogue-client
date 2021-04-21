@@ -151,6 +151,8 @@ pub enum Command {
 pub struct ExternalEndpoint {
     pub r#type: Option<String>,
     pub url: String,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub method: String,
     #[serde(default, skip_serializing_if = "HashMap::is_empty")]
     pub headers: HashMap<String, String>,
 }
