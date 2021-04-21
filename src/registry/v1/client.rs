@@ -130,7 +130,7 @@ impl Client {
     }
 
     /// Get a device by name, resolving all first level gateways.
-    pub async fn get_devices_and_gateways<A, D>(
+    pub async fn get_device_and_gateways<A, D>(
         &self,
         application: A,
         device: D,
