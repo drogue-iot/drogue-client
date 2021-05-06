@@ -41,7 +41,7 @@ impl Client {
                 .path_segments_mut()
                 .map_err(|_| ClientError::Request("Failed to get paths".into()))?;
 
-            path.extend(&["api", "v1", "apps"]);
+            path.extend(&["api", "registry", "v1alpha1", "apps"]);
             if !application.is_empty() {
                 path.push(application);
             }
@@ -269,7 +269,7 @@ mod test {
         let url = client.url("foo", Some("bar/baz")).unwrap();
         assert_eq!(
             url.to_string(),
-            "http://localhost/api/v1/apps/foo/devices/bar%2Fbaz"
+            "http://localhost/api/registry/v1alpha1/apps/foo/devices/bar%2Fbaz"
         );
 
         Ok(())
