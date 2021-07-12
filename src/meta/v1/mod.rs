@@ -158,10 +158,13 @@ pub trait CommonMetadataMut: CommonMetadata {
     /// ensures that the finalizer is set
     ///
     /// Returns `true` if the finalizer was added and the resource must be stored
-    fn ensure_finalizer(&mut self) -> bool {
-        if !self.finalizers().iter().any(|r| r == "ttn") {
+    fn ensure_finalizer<S>(&mut self, finalizer: S) -> bool
+    where
+        S: AsRef<str>,
+    {
+        if !self.finalizers().iter().any(|r| r == finalizer.as_ref()) {
             let mut finalizers = self.finalizers().clone();
-            finalizers.push("ttn".into());
+            finalizers.push(finalizer.as_ref().into());
             self.set_finalizers(finalizers);
             true
         } else {
