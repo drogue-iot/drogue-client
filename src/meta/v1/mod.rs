@@ -154,6 +154,20 @@ pub trait CommonMetadataMut: CommonMetadata {
     fn set_generation(&mut self, generation: u64);
     fn set_deletion_timestamp(&mut self, deletion_timestamp: Option<DateTime<Utc>>);
     fn set_finalizers(&mut self, finalizers: Vec<String>);
+
+    /// ensures that the finalizer is set
+    ///
+    /// Returns `true` if the finalizer was added and the resource must be stored
+    fn ensure_finalizer(&mut self) -> bool {
+        if !self.finalizers().iter().any(|r| r == "ttn") {
+            let mut finalizers = self.finalizers().clone();
+            finalizers.push("ttn".into());
+            self.set_finalizers(finalizers);
+            true
+        } else {
+            false
+        }
+    }
 }
 
 macro_rules! common_metadata {
