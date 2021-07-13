@@ -154,25 +154,14 @@ pub trait CommonMetadataMut: CommonMetadata {
     fn set_generation(&mut self, generation: u64);
     fn set_deletion_timestamp(&mut self, deletion_timestamp: Option<DateTime<Utc>>);
     fn set_finalizers(&mut self, finalizers: Vec<String>);
-}
 
-pub trait FinalizerExt {
-    fn ensure_finalizer<S>(&mut self, finalizer: S) -> bool
-    where
-        S: AsRef<str>;
-}
-
-impl FinalizerExt for dyn CommonMetadataMut {
     /// ensures that the finalizer is set
     ///
     /// Returns `true` if the finalizer was added and the resource must be stored
-    fn ensure_finalizer<S>(&mut self, finalizer: S) -> bool
-    where
-        S: AsRef<str>,
-    {
-        if !self.finalizers().iter().any(|r| r == finalizer.as_ref()) {
+    fn ensure_finalizer(&mut self, finalizer: &str) -> bool {
+        if !self.finalizers().iter().any(|r| r == finalizer) {
             let mut finalizers = self.finalizers().clone();
-            finalizers.push(finalizer.as_ref().into());
+            finalizers.push(finalizer.into());
             self.set_finalizers(finalizers);
             true
         } else {
@@ -269,5 +258,17 @@ mod test {
         assert_eq!(meta.name, "foo");
         assert_eq!(meta.deletion_timestamp, Some(ts));
         assert_eq!(meta.labels, labels);
+    }
+
+    #[test]
+    fn test_finalizer() {
+        let mut meta = ScopedMetadata::default();
+        meta.ensure_finalizer("Foo");
+        assert_eq!(meta.finalizers, vec!["Foo"]);
+        {
+            let meta_ref: &mut dyn CommonMetadataMut = &mut meta;
+            meta_ref.ensure_finalizer("Bar");
+        }
+        assert_eq!(meta.finalizers, vec!["Foo".to_string(), "Bar".to_string()]);
     }
 }
