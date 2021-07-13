@@ -154,7 +154,15 @@ pub trait CommonMetadataMut: CommonMetadata {
     fn set_generation(&mut self, generation: u64);
     fn set_deletion_timestamp(&mut self, deletion_timestamp: Option<DateTime<Utc>>);
     fn set_finalizers(&mut self, finalizers: Vec<String>);
+}
 
+pub trait FinalizerExt {
+    fn ensure_finalizer<S>(&mut self, finalizer: S) -> bool
+    where
+        S: AsRef<str>;
+}
+
+impl FinalizerExt for dyn CommonMetadataMut {
     /// ensures that the finalizer is set
     ///
     /// Returns `true` if the finalizer was added and the resource must be stored
