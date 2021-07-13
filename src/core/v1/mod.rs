@@ -15,7 +15,7 @@ pub struct Condition {
     pub r#type: String,
 }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize, Eq, PartialEq)]
 pub struct Conditions(pub Vec<Condition>);
 
 fn default_condition_status() -> String {
@@ -195,6 +195,24 @@ mod test {
                     r#type: "FooBarReady".to_string()
                 }
             ]
+        );
+    }
+
+    #[test]
+    fn serialize() {
+        let json = serde_json::to_string(&Conditions(vec![Condition {
+            last_transition_time: DateTime::parse_from_rfc3339("2001-02-03T12:34:56Z")
+                .expect("Valid timestmap")
+                .with_timezone(&Utc),
+            message: None,
+            reason: None,
+            status: "True".to_string(),
+            r#type: "Ready".to_string(),
+        }]))
+        .expect("Serialize to JSON");
+        assert_eq!(
+            json,
+            r#"[{"lastTransitionTime":"2001-02-03T12:34:56Z","status":"True","type":"Ready"}]"#
         );
     }
 }
