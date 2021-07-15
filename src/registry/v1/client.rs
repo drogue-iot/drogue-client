@@ -181,7 +181,7 @@ impl Client {
     /// The application must exist, otherwise `false` is returned.
     pub async fn update_app(
         &self,
-        application: Application,
+        application: &Application,
         context: Context,
     ) -> ClientResult<bool> {
         let req = self
@@ -197,7 +197,7 @@ impl Client {
     /// Update (overwrite) a device.
     ///
     /// The application must exist, otherwise `false` is returned.
-    pub async fn update_device(&self, device: Device, context: Context) -> ClientResult<bool> {
+    pub async fn update_device(&self, device: &Device, context: Context) -> ClientResult<bool> {
         let req = self
             .client
             .put(self.url(&device.metadata.application, Some(&device.metadata.name))?)
@@ -218,7 +218,7 @@ impl Client {
     }
 
     /// Create a new application.
-    pub async fn create_app(&self, app: Application, context: Context) -> ClientResult<()> {
+    pub async fn create_app(&self, app: &Application, context: Context) -> ClientResult<()> {
         let req = self
             .client
             .post(self.url("", None)?)
@@ -230,7 +230,7 @@ impl Client {
     }
 
     /// Create a new device.
-    pub async fn create_device(&self, device: Device, context: Context) -> ClientResult<()> {
+    pub async fn create_device(&self, device: &Device, context: Context) -> ClientResult<()> {
         let req = self
             .client
             .post(self.url(&device.metadata.application, Some(""))?)
