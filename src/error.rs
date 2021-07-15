@@ -37,6 +37,18 @@ where
     Syntax(#[source] Box<dyn std::error::Error + Send + Sync>),
 }
 
+impl<E> ClientError<E>
+where
+    E: std::error::Error + Send + Sync + 'static,
+{
+    pub fn syntax<S>(err: S) -> ClientError<E>
+    where
+        S: std::error::Error + Send + Sync + 'static,
+    {
+        Self::Syntax(Box::new(err))
+    }
+}
+
 #[cfg(feature = "reqwest")]
 impl From<reqwest::Error> for ClientError<reqwest::Error> {
     fn from(err: reqwest::Error) -> Self {
@@ -44,7 +56,10 @@ impl From<reqwest::Error> for ClientError<reqwest::Error> {
     }
 }
 
-impl From<serde_json::Error> for ClientError<reqwest::Error> {
+impl<E> From<serde_json::Error> for ClientError<E>
+where
+    E: std::error::Error + Send + Sync + 'static,
+{
     fn from(err: serde_json::Error) -> Self {
         ClientError::Syntax(Box::new(err))
     }
