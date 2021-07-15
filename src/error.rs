@@ -34,13 +34,19 @@ where
     Url(#[from] ParseError),
     /// Syntax error.
     #[error("Syntax error: {0}")]
-    Syntax(#[from] serde_json::error::Error),
+    Syntax(#[source] Box<dyn std::error::Error + Send + Sync>),
 }
 
 #[cfg(feature = "reqwest")]
 impl From<reqwest::Error> for ClientError<reqwest::Error> {
     fn from(err: reqwest::Error) -> Self {
         ClientError::Client(Box::new(err))
+    }
+}
+
+impl From<serde_json::Error> for ClientError<reqwest::Error> {
+    fn from(err: serde_json::Error) -> Self {
+        ClientError::Syntax(Box::new(err))
     }
 }
 
