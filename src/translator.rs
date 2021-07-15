@@ -44,7 +44,7 @@ pub trait Translator {
                 let s = D::default();
                 f(s)
             }
-            Some(Err(err)) => Err(err)?,
+            Some(Err(err)) => return Err(err),
         };
 
         self.set_section(s)

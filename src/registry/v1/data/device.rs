@@ -59,7 +59,7 @@ attribute!(pub DeviceSpecCore[DeviceEnabled:bool] => |core| match core {
     None => true,
 });
 attribute!(pub DeviceSpecCommands[Commands:Vec<Command>] => |commands| match commands {
-    Some(Ok(commands)) => commands.commands.clone(),
+    Some(Ok(commands)) => commands.commands,
     _ => vec![],
 });
 attribute!(pub DeviceSpecCommands[FirstCommand:Option<Command>] => |commands| match commands {
