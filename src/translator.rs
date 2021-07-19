@@ -50,6 +50,16 @@ pub trait Translator {
         self.set_section(s)
     }
 
+    fn clear_section<D>(&mut self)
+    where
+        D: Serialize + Dialect,
+    {
+        match D::section() {
+            Section::Spec => self.spec_mut().remove(D::key()),
+            Section::Status => self.status_mut().remove(D::key()),
+        };
+    }
+
     fn spec_for<T, S>(&self, key: S) -> Option<Result<T, serde_json::Error>>
     where
         T: for<'de> Deserialize<'de>,
