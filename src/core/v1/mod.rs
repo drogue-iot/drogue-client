@@ -49,10 +49,12 @@ impl Conditions {
         .into()
     }
 
-    pub fn update<S>(&mut self, r#type: S, status: ConditionStatus)
+    pub fn update<T, S>(&mut self, r#type: T, status: S)
     where
-        S: AsRef<str>,
+        T: AsRef<str>,
+        S: Into<ConditionStatus>,
     {
+        let status = status.into();
         let str_status = Self::make_status(status.status);
 
         for mut condition in &mut self.0 {
