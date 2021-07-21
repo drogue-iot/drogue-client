@@ -6,13 +6,21 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 pub struct Condition {
     pub last_transition_time: DateTime<Utc>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(default, skip_serializing_if = "is_empty")]
     pub message: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(default, skip_serializing_if = "is_empty")]
     pub reason: Option<String>,
     #[serde(default = "default_condition_status")]
     pub status: String,
     pub r#type: String,
+}
+
+fn is_empty(value: &Option<String>) -> bool {
+    match value {
+        None => true,
+        Some(str) if str.is_empty() => true,
+        _ => false,
+    }
 }
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize, Eq, PartialEq)]
