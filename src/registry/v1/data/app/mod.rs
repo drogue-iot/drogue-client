@@ -1,5 +1,10 @@
+mod downstream;
+
+pub use downstream::*;
+
 use crate::{
-    meta::v1::NonScopedMetadata, serde::Base64Standard, translator, Dialect, Section, Translator,
+    dialect, meta::v1::NonScopedMetadata, serde::Base64Standard, translator, Dialect, Section,
+    Translator,
 };
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
@@ -26,15 +31,7 @@ pub struct ApplicationSpecTrustAnchors {
     pub anchors: Vec<ApplicationSpecTrustAnchorEntry>,
 }
 
-impl Dialect for ApplicationSpecTrustAnchors {
-    fn key() -> &'static str {
-        "trustAnchors"
-    }
-
-    fn section() -> Section {
-        Section::Spec
-    }
-}
+dialect!(ApplicationSpecTrustAnchors [Section::Spec => "trustAnchors"]);
 
 /// A single trust-anchor entry.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Eq, PartialEq)]
@@ -49,15 +46,7 @@ pub struct ApplicationStatusTrustAnchors {
     pub anchors: Vec<ApplicationStatusTrustAnchorEntry>,
 }
 
-impl Dialect for ApplicationStatusTrustAnchors {
-    fn key() -> &'static str {
-        "trustAnchors"
-    }
-
-    fn section() -> Section {
-        Section::Status
-    }
-}
+dialect!(ApplicationStatusTrustAnchors [Section::Status => "trustAnchors"]);
 
 /// A single trust-anchor status.
 #[derive(Clone, Debug, Deserialize, Serialize, Eq, PartialEq)]

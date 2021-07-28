@@ -36,3 +36,4 @@ default = ["reqwest", "openid"]
 
 [dev-dependencies]
 anyhow = "1"
+maplit = "1"
