@@ -1,6 +1,8 @@
 mod downstream;
+mod kafka;
 
 pub use downstream::*;
+pub use kafka::*;
 
 use crate::{
     dialect, meta::v1::NonScopedMetadata, serde::Base64Standard, translator, Dialect, Section,
