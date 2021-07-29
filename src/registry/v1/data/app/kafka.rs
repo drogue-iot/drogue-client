@@ -1,4 +1,4 @@
-use drogue_client::{core, dialect, Dialect, Section};
+use crate::{core, dialect, Dialect, Section};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
