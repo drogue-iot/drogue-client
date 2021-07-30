@@ -12,7 +12,7 @@ pub struct KafkaAppStatus {
     /// This may be provided by the system to direct the downstream events (device-to-cloud) to an
     /// alternate Kafka target. If provided, this must contain both the server as well as the topic.
     /// Most likely, access credentials have to be provided too.
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub downstream: Option<KafkaDownstreamStatus>,
 }
 
