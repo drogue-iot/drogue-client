@@ -1,16 +1,17 @@
 use crate::{dialect, Dialect, Section};
+use base64_serde::Deserializer;
+use core::fmt;
+use serde::de::{MapAccess, Visitor};
 use serde::ser::SerializeStruct;
-use serde::{Deserialize, Serialize, Serializer};
+use serde::{de, Deserialize, Serialize, Serializer};
 use std::collections::HashMap;
 
 dialect!(DownstreamSpec [Section::Spec => "downstream"]);
 
 /// The application downstream specification.
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub enum DownstreamSpec {
     ExternalKafka(ExternalKafkaSpec),
-    #[serde(other)]
     Internal,
 }
 
@@ -30,6 +31,71 @@ impl Serialize for DownstreamSpec {
     }
 }
 
+impl<'de> Deserialize<'de> for DownstreamSpec {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        enum Variant {
+            Internal,
+            ExternalKafka,
+        }
+
+        impl<'de> Deserialize<'de> for Variant {
+            fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+            where
+                D: Deserializer<'de>,
+            {
+                struct VariantVisitor;
+
+                impl<'de> Visitor<'de> for VariantVisitor {
+                    type Value = Variant;
+
+                    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                        formatter.write_str("Variant type")
+                    }
+
+                    fn visit_str<E>(self, value: &str) -> Result<Variant, E>
+                    where
+                        E: de::Error,
+                    {
+                        match value {
+                            "externalKafka" => Ok(Variant::ExternalKafka),
+                            _ => Ok(Variant::Internal),
+                        }
+                    }
+                }
+
+                deserializer.deserialize_identifier(VariantVisitor)
+            }
+        }
+
+        struct ValueVisitor;
+
+        impl<'de> Visitor<'de> for ValueVisitor {
+            type Value = DownstreamSpec;
+
+            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                formatter.write_str("DownstreamSpec variant")
+            }
+
+            fn visit_map<V>(self, mut map: V) -> Result<Self::Value, V::Error>
+            where
+                V: MapAccess<'de>,
+            {
+                match map.next_key()? {
+                    Some(Variant::ExternalKafka) => {
+                        Ok(DownstreamSpec::ExternalKafka(map.next_value()?))
+                    }
+                    _ => Ok(DownstreamSpec::Internal),
+                }
+            }
+        }
+
+        deserializer.deserialize_map(ValueVisitor)
+    }
+}
+
 /// Defaulting to the internally managed downstream target.
 impl Default for DownstreamSpec {
     fn default() -> Self {
@@ -43,6 +109,7 @@ impl Default for DownstreamSpec {
 pub struct ExternalKafkaSpec {
     pub bootstrap_servers: String,
     pub topic: String,
+    #[serde(default)]
     pub properties: HashMap<String, String>,
 }
 
@@ -89,6 +156,83 @@ mod test {
                 }
             }),
             json["spec"]
+        );
+    }
+
+    #[test]
+    fn test_deserialize_none() {
+        let app: Application = serde_json::from_value(json!({
+            "metadata": {
+                "name": "foo",
+            }
+        }))
+        .unwrap();
+
+        let spec = app.section::<DownstreamSpec>();
+        assert!(spec.is_none());
+        assert_eq!(
+            spec.transpose().unwrap().unwrap_or_default(),
+            DownstreamSpec::Internal
+        );
+    }
+
+    #[test]
+    fn test_deserialize_unknown() {
+        let app: Application = serde_json::from_value(json!({
+            "metadata": {
+                "name": "foo",
+            },
+            "spec": {
+                "downstream": { "foo": {} },
+            }
+        }))
+        .unwrap();
+
+        let spec = app.section::<DownstreamSpec>();
+        assert_eq!(spec.transpose().unwrap(), Some(DownstreamSpec::Internal));
+    }
+
+    #[test]
+    fn test_deserialize_internal() {
+        let app: Application = serde_json::from_value(json!({
+            "metadata": {
+                "name": "foo",
+            },
+            "spec": {
+                "downstream": {},
+            }
+        }))
+        .unwrap();
+
+        let spec = app.section::<DownstreamSpec>();
+        assert_eq!(spec.transpose().unwrap(), Some(DownstreamSpec::Internal));
+    }
+
+    #[test]
+    fn test_deserialize_external() {
+        let app: Application = serde_json::from_value(json!({
+            "metadata": {
+                "name": "foo",
+            },
+            "spec": {
+                "downstream": {
+                    "externalKafka": {
+                        "bootstrapServers": "server",
+                        "topic": "topic",
+                    }
+                },
+            }
+        }))
+        .unwrap();
+
+        let spec = app.section::<DownstreamSpec>();
+        assert_eq!(
+            spec.transpose().unwrap(),
+            Some(DownstreamSpec::ExternalKafka(ExternalKafkaSpec {
+                bootstrap_servers: "server".into(),
+                topic: "topic".into(),
+                properties: Default::default()
+            }))
         );
     }
 }
