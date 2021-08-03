@@ -47,6 +47,24 @@ pub struct ConditionStatus {
     pub message: Option<String>,
 }
 
+impl From<Option<bool>> for ConditionStatus {
+    fn from(value: Option<bool>) -> Self {
+        Self {
+            status: value,
+            ..Default::default()
+        }
+    }
+}
+
+impl From<bool> for ConditionStatus {
+    fn from(value: bool) -> Self {
+        Self {
+            status: Some(value),
+            ..Default::default()
+        }
+    }
+}
+
 impl Conditions {
     fn make_status(status: Option<bool>) -> String {
         match status {
@@ -224,5 +242,20 @@ mod test {
             json,
             r#"[{"lastTransitionTime":"2001-02-03T12:34:56Z","status":"True","type":"Ready"}]"#
         );
+    }
+
+    #[test]
+    fn conversions() {
+        let mut conditions = Conditions::default();
+        conditions.update(
+            "Foo",
+            ConditionStatus {
+                status: None,
+                reason: None,
+                message: None,
+            },
+        );
+        conditions.update("Foo", true);
+        conditions.update("Bar", Some(true));
     }
 }
