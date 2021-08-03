@@ -3,6 +3,8 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::ops::{Deref, DerefMut};
 
+pub const CONDITION_READY: &str = "Ready";
+
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct Condition {
@@ -106,6 +108,38 @@ impl Conditions {
             status: str_status,
             r#type: r#type.as_ref().into(),
         });
+    }
+
+    /// Aggregate the "Ready" condition.
+    pub fn aggregate_ready(mut self) -> Self {
+        let mut ready = true;
+        for condition in &self.0 {
+            if condition.r#type == CONDITION_READY {
+                continue;
+            }
+
+            if condition.status != "True" {
+                ready = false;
+                break;
+            }
+        }
+
+        self.update(
+            CONDITION_READY,
+            match ready {
+                true => ConditionStatus {
+                    status: Some(true),
+                    reason: None,
+                    message: None,
+                },
+                false => ConditionStatus {
+                    status: Some(false),
+                    reason: Some("NonReadyConditions".into()),
+                    message: None,
+                },
+            },
+        );
+        self
     }
 }
 
