@@ -1,6 +1,7 @@
 use crate::{Dialect, Section};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+use std::ops::{Deref, DerefMut};
 
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
 #[serde(rename_all = "camelCase")]
@@ -105,6 +106,20 @@ impl Conditions {
             status: str_status,
             r#type: r#type.as_ref().into(),
         });
+    }
+}
+
+impl Deref for Conditions {
+    type Target = Vec<Condition>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl DerefMut for Conditions {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
     }
 }
 
