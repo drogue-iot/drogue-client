@@ -12,7 +12,7 @@ dialect!(DownstreamSpec [Section::Spec => "downstream"]);
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum DownstreamSpec {
     ExternalKafka(ExternalKafkaSpec),
-    Internal,
+    Internal(InternalSpec),
 }
 
 impl Serialize for DownstreamSpec {
@@ -25,7 +25,11 @@ impl Serialize for DownstreamSpec {
             Self::ExternalKafka(kafka) => {
                 s.serialize_field("externalKafka", &kafka)?;
             }
-            Self::Internal => {}
+            Self::Internal(kafka) => {
+                if kafka != &Default::default() {
+                    s.serialize_field("internal", &kafka)?;
+                }
+            }
         }
         s.end()
     }
@@ -87,7 +91,8 @@ impl<'de> Deserialize<'de> for DownstreamSpec {
                     Some(Variant::ExternalKafka) => {
                         Ok(DownstreamSpec::ExternalKafka(map.next_value()?))
                     }
-                    _ => Ok(DownstreamSpec::Internal),
+                    Some(Variant::Internal) => Ok(DownstreamSpec::Internal(map.next_value()?)),
+                    None => Ok(DownstreamSpec::Internal(Default::default())),
                 }
             }
         }
@@ -99,7 +104,7 @@ impl<'de> Deserialize<'de> for DownstreamSpec {
 /// Defaulting to the internally managed downstream target.
 impl Default for DownstreamSpec {
     fn default() -> Self {
-        Self::Internal
+        Self::Internal(Default::default())
     }
 }
 
@@ -113,9 +118,17 @@ pub struct ExternalKafkaSpec {
     pub properties: HashMap<String, String>,
 }
 
+/// The downstream specification when using internally managed resources.
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Eq, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct InternalSpec {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub password: Option<String>,
+}
+
 #[cfg(test)]
 mod test {
-    use crate::registry::v1::ExternalKafkaSpec;
+    use crate::registry::v1::{ExternalKafkaSpec, InternalSpec};
     use crate::{
         registry::v1::{Application, DownstreamSpec},
         Translator,
@@ -126,7 +139,8 @@ mod test {
     #[test]
     fn test_json_default() {
         let mut app = Application::default();
-        app.set_section(DownstreamSpec::Internal).unwrap();
+        app.set_section(DownstreamSpec::Internal(Default::default()))
+            .unwrap();
         let json = serde_json::to_value(&app).unwrap();
         assert_eq!(json!({"downstream": {}}), json["spec"]);
     }
@@ -172,7 +186,7 @@ mod test {
         assert!(spec.is_none());
         assert_eq!(
             spec.transpose().unwrap().unwrap_or_default(),
-            DownstreamSpec::Internal
+            DownstreamSpec::Internal(Default::default())
         );
     }
 
@@ -189,7 +203,10 @@ mod test {
         .unwrap();
 
         let spec = app.section::<DownstreamSpec>();
-        assert_eq!(spec.transpose().unwrap(), Some(DownstreamSpec::Internal));
+        assert_eq!(
+            spec.transpose().unwrap(),
+            Some(DownstreamSpec::Internal(Default::default()))
+        );
     }
 
     #[test]
@@ -205,7 +222,56 @@ mod test {
         .unwrap();
 
         let spec = app.section::<DownstreamSpec>();
-        assert_eq!(spec.transpose().unwrap(), Some(DownstreamSpec::Internal));
+        assert_eq!(
+            spec.transpose().unwrap(),
+            Some(DownstreamSpec::Internal(Default::default()))
+        );
+    }
+
+    #[test]
+    fn test_deserialize_internal_2() {
+        let app: Application = serde_json::from_value(json!({
+            "metadata": {
+                "name": "foo",
+            },
+            "spec": {
+                "downstream": {
+                    "internal": {}
+                },
+            }
+        }))
+        .unwrap();
+
+        let spec = app.section::<DownstreamSpec>();
+        assert_eq!(
+            spec.transpose().unwrap(),
+            Some(DownstreamSpec::Internal(Default::default()))
+        );
+    }
+
+    #[test]
+    fn test_deserialize_internal_password() {
+        let app: Application = serde_json::from_value(json!({
+            "metadata": {
+                "name": "foo",
+            },
+            "spec": {
+                "downstream": {
+                    "internal": {
+                        "password": "foobar",
+                    }
+                },
+            }
+        }))
+        .unwrap();
+
+        let spec = app.section::<DownstreamSpec>();
+        assert_eq!(
+            spec.transpose().unwrap(),
+            Some(DownstreamSpec::Internal(InternalSpec {
+                password: Some("foobar".to_string())
+            }))
+        );
     }
 
     #[test]
