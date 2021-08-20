@@ -223,6 +223,22 @@ pub struct ExternalEndpoint {
     pub headers: HashMap<String, String>,
 }
 
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Eq, PartialEq)]
+pub struct DeviceAlias {
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub alias: Vec<String>,
+}
+
+impl Dialect for DeviceAlias {
+    fn key() -> &'static str {
+        "alias"
+    }
+    fn section() -> Section {
+        Section::Spec
+    }
+}
+
 #[cfg(test)]
 mod test {
 
@@ -246,5 +262,16 @@ mod test {
                 },
             ]
         )
+    }
+
+    #[test]
+    fn test_alias() {
+        let des = serde_json::from_value::<DeviceAlias>(json! ({
+            "alias": ["drogue", "iot"]
+        }));
+        assert_eq!(
+            des.unwrap().alias,
+            vec!["drogue", "iot"]
+        );
     }
 }
