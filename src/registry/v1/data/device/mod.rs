@@ -227,12 +227,12 @@ pub struct ExternalEndpoint {
 pub struct DeviceSpecAliases {
     #[serde(default)]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub alias: Vec<String>,
+    pub aliases: Vec<String>,
 }
 
 impl Dialect for DeviceSpecAliases {
     fn key() -> &'static str {
-        "alias"
+        "aliases"
     }
     fn section() -> Section {
         Section::Spec
@@ -267,8 +267,8 @@ mod test {
     #[test]
     fn test_alias() {
         let des = serde_json::from_value::<DeviceSpecAliases>(json! ({
-            "alias": ["drogue", "iot"]
+            "aliases": ["drogue", "iot"]
         }));
-        assert_eq!(des.unwrap().alias, vec!["drogue", "iot"]);
+        assert_eq!(des.unwrap().aliases, vec!["drogue", "iot"]);
     }
 }
