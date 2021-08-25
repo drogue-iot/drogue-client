@@ -232,7 +232,7 @@ pub struct DeviceSpecAliases {
 
 impl Dialect for DeviceSpecAliases {
     fn key() -> &'static str {
-        "aliases"
+        "alias"
     }
     fn section() -> Section {
         Section::Spec
@@ -265,7 +265,7 @@ mod test {
     }
 
     #[test]
-    fn test_alias() {
+    fn deser_aliases() {
         let des = serde_json::from_value::<DeviceSpecAliases>(json! ({
             "aliases": ["drogue", "iot"]
         }));
