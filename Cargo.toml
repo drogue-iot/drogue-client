@@ -1,6 +1,6 @@
 [package]
 name = "drogue-client"
-version = "0.7.0"
+version = "0.7.0-alpha.1"
 authors = ["Jens Reimann <jreimann@redhat.com>"]
 license = "Apache-2.0"
 description = "Clients for the Drogue IoT Cloud APIs"
