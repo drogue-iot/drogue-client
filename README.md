@@ -16,6 +16,6 @@ Add the dependency to your `Cargo.toml`:
 ~~~toml
 [dependencies]
 
-drogue-client = "0.5"
+drogue-client = "0.7"
 ~~~
 
