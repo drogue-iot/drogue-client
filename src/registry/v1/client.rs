@@ -1,9 +1,6 @@
 use super::data::*;
-use crate::{
-    error::ClientError,
-    openid::{OpenIdTokenProvider, TokenInjector},
-    Context, Translator,
-};
+use crate::openid::TokenProvider;
+use crate::{error::ClientError, openid::TokenInjector, Context, Translator};
 use futures::{stream, StreamExt, TryStreamExt};
 use reqwest::{Response, StatusCode};
 use serde::de::DeserializeOwned;
@@ -11,21 +8,23 @@ use url::Url;
 
 /// A device registry client, backed by reqwest.
 #[derive(Clone, Debug)]
-pub struct Client {
+pub struct Client<TP>
+where
+    TP: TokenProvider<Error = reqwest::Error>,
+{
     client: reqwest::Client,
     registry_url: Url,
-    token_provider: Option<OpenIdTokenProvider>,
+    token_provider: TP,
 }
 
 type ClientResult<T> = Result<T, ClientError<reqwest::Error>>;
 
-impl Client {
+impl<TP> Client<TP>
+where
+    TP: TokenProvider<Error = reqwest::Error>,
+{
     /// Create a new client instance.
-    pub fn new(
-        client: reqwest::Client,
-        registry_url: Url,
-        token_provider: Option<OpenIdTokenProvider>,
-    ) -> Self {
+    pub fn new(client: reqwest::Client, registry_url: Url, token_provider: TP) -> Self {
         Self {
             client,
             registry_url,
@@ -259,12 +258,16 @@ impl Client {
 
 #[cfg(test)]
 mod test {
-
     use super::*;
+    use crate::openid::NoTokenProvider;
 
     #[test]
     fn test_url_app() -> anyhow::Result<()> {
-        let client = Client::new(Default::default(), Url::parse("http://localhost")?, None);
+        let client = Client::new(
+            Default::default(),
+            Url::parse("http://localhost")?,
+            NoTokenProvider,
+        );
 
         let url = client.url("foo", Some("bar/baz")).unwrap();
         assert_eq!(

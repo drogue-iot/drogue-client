@@ -1,5 +1,7 @@
+use super::TokenProvider;
 use crate::openid::Expires;
 use async_std::sync::RwLock;
+use async_trait::async_trait;
 use core::fmt::{self, Debug, Formatter};
 use std::{ops::Deref, sync::Arc};
 
@@ -49,16 +51,6 @@ impl OpenIdTokenProvider {
         self.fetch_fresh_token().await
     }
 
-    #[cfg(feature = "reqwest")]
-    pub async fn provide_access_token(
-        &self,
-    ) -> Result<String, crate::error::ClientError<reqwest::Error>> {
-        self.provide_token()
-            .await
-            .map(|token| token.access_token)
-            .map_err(|err| crate::error::ClientError::Token(Box::new(err)))
-    }
-
     async fn fetch_fresh_token(&self) -> Result<openid::Bearer, openid::error::Error> {
         log::debug!("Fetching fresh token...");
 
@@ -102,5 +94,20 @@ impl OpenIdTokenProvider {
 
     async fn initial_token(&self) -> Result<openid::Bearer, openid::error::Error> {
         Ok(self.client.request_token_using_client_credentials().await?)
+    }
+}
+
+#[cfg(feature = "reqwest")]
+#[async_trait]
+impl TokenProvider for OpenIdTokenProvider {
+    type Error = reqwest::Error;
+
+    async fn provide_access_token(
+        &self,
+    ) -> Result<Option<String>, crate::error::ClientError<reqwest::Error>> {
+        self.provide_token()
+            .await
+            .map(|token| Some(token.access_token))
+            .map_err(|err| crate::error::ClientError::Token(Box::new(err)))
     }
 }
