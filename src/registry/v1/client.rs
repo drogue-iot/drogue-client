@@ -216,6 +216,15 @@ where
         }
     }
 
+    async fn delete_response(response: Response) -> ClientResult<bool> {
+        log::debug!("Eval delete response: {:#?}", response);
+        match response.status() {
+            StatusCode::OK | StatusCode::NO_CONTENT => Ok(true),
+            StatusCode::NOT_FOUND => Ok(false),
+            _ => Self::default_response(response).await,
+        }
+    }
+
     /// Create a new application.
     pub async fn create_app(&self, app: &Application, context: Context) -> ClientResult<()> {
         let req = self
@@ -228,6 +237,19 @@ where
         Self::create_response(req.send().await?).await
     }
 
+    pub async fn delete_app<A>(&self, application: A, context: Context) -> ClientResult<bool>
+    where
+        A: AsRef<str>,
+    {
+        let req = self
+            .client
+            .delete(self.url(application.as_ref(), None)?)
+            .inject_token(&self.token_provider, context)
+            .await?;
+
+        Self::delete_response(req.send().await?).await
+    }
+
     /// Create a new device.
     pub async fn create_device(&self, device: &Device, context: Context) -> ClientResult<()> {
         let req = self
@@ -238,6 +260,25 @@ where
             .await?;
 
         Self::create_response(req.send().await?).await
+    }
+
+    pub async fn delete_device<A, D>(
+        &self,
+        application: A,
+        device: D,
+        context: Context,
+    ) -> ClientResult<bool>
+    where
+        A: AsRef<str>,
+        D: AsRef<str>,
+    {
+        let req = self
+            .client
+            .delete(self.url(application.as_ref(), Some(device.as_ref()))?)
+            .inject_token(&self.token_provider, context)
+            .await?;
+
+        Self::delete_response(req.send().await?).await
     }
 
     async fn create_response(response: Response) -> ClientResult<()> {
