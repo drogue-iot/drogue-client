@@ -1,5 +1,5 @@
 use super::TokenProvider;
-use crate::openid::Expires;
+use crate::openid::{Credentials, Expires};
 use async_std::sync::RwLock;
 use async_trait::async_trait;
 use core::fmt::{self, Debug, Formatter};
@@ -104,10 +104,10 @@ impl TokenProvider for OpenIdTokenProvider {
 
     async fn provide_access_token(
         &self,
-    ) -> Result<Option<String>, crate::error::ClientError<reqwest::Error>> {
+    ) -> Result<Option<Credentials>, crate::error::ClientError<reqwest::Error>> {
         self.provide_token()
             .await
-            .map(|token| Some(token.access_token))
+            .map(|token| Some(Credentials::Bearer(token.access_token)))
             .map_err(|err| crate::error::ClientError::Token(Box::new(err)))
     }
 }

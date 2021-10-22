@@ -1,4 +1,4 @@
-use crate::openid::TokenProvider;
+use crate::openid::{Credentials, TokenProvider};
 use crate::{context::Context, error::ClientError};
 use async_trait::async_trait;
 
@@ -22,8 +22,11 @@ impl TokenInjector for reqwest::RequestBuilder {
     ) -> Result<Self, ClientError<reqwest::Error>> {
         if let Some(token) = context.provided_token {
             Ok(self.bearer_auth(token))
-        } else if let Some(token) = token_provider.provide_access_token().await? {
-            Ok(self.bearer_auth(token))
+        } else if let Some(credentials) = token_provider.provide_access_token().await? {
+            Ok(match credentials {
+                Credentials::Bearer(token) => self.bearer_auth(token),
+                Credentials::Basic(username, password) => self.basic_auth(username, password),
+            })
         } else {
             Ok(self)
         }
