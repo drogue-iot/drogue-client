@@ -239,18 +239,28 @@ mod test {
     use serde_json::json;
 
     #[test]
-    fn deser_credentials_legacy_plain() {
+    fn deser_credentials() {
         let des = serde_json::from_value::<Vec<Credential>>(json! {[
             {"pass": "foo"},
-            {"user": {"username": "foo", "password": "bar"}}
+            {"pass": {"bcrypt": "$2a$12$/ooOoK.qKkqo2GvCvgt0ae076ak0Aa8VoLTW2Ei/WUgZ2n9kt1zZ2"}},
+            {"user": {"username": "foo", "password": "bar"}},
+            {"user": {"username": "foo", "password": {"sha512": "$6$ncx1PBP3mqha5Z7B$GXz/Q14oxbGcIx78lJ19Jxnx38v.Dp0zgmprUAWVjv4Y447SmBfUFLtDByZnoIneekTAPHjQS.osdZ3rYWdk/."}}}
         ]});
         assert_eq!(
             des.unwrap(),
             vec![
                 Credential::Password(Password::Plain("foo".into())),
+                Credential::Password(Password::BCrypt(
+                    "$2a$12$/ooOoK.qKkqo2GvCvgt0ae076ak0Aa8VoLTW2Ei/WUgZ2n9kt1zZ2".into()
+                )),
                 Credential::UsernamePassword {
                     username: "foo".into(),
                     password: Password::Plain("bar".into()),
+                    unique: false,
+                },
+                Credential::UsernamePassword {
+                    username: "foo".into(),
+                    password: Password::Sha512("$6$ncx1PBP3mqha5Z7B$GXz/Q14oxbGcIx78lJ19Jxnx38v.Dp0zgmprUAWVjv4Y447SmBfUFLtDByZnoIneekTAPHjQS.osdZ3rYWdk/.".into()),
                     unique: false,
                 },
             ]
