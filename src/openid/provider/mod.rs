@@ -1,7 +1,7 @@
-mod api_key;
+mod access_token;
 mod openid;
 
-pub use self::api_key::*;
+pub use self::access_token::*;
 pub use self::openid::*;
 
 use crate::error::ClientError;
