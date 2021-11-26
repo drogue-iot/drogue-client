@@ -13,7 +13,7 @@ pub enum Credentials {
     Basic(String, Option<String>),
 }
 
-#[async_trait]
+#[async_trait(?Send)]
 pub trait TokenProvider {
     type Error: std::error::Error + Send + Sync;
 
@@ -24,7 +24,7 @@ pub trait TokenProvider {
 
 pub struct NoTokenProvider;
 
-#[async_trait]
+#[async_trait(?Send)]
 impl TokenProvider for NoTokenProvider {
     type Error = reqwest::Error;
 
@@ -33,7 +33,7 @@ impl TokenProvider for NoTokenProvider {
     }
 }
 
-#[async_trait]
+#[async_trait(?Send)]
 impl<T> TokenProvider for Option<T>
 where
     T: TokenProvider + Sync,
