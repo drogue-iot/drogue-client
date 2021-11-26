@@ -10,7 +10,7 @@ use url::Url;
 #[derive(Clone, Debug)]
 pub struct Client<TP>
 where
-    TP: TokenProvider<Error = reqwest::Error>,
+    TP: TokenProvider,
 {
     client: reqwest::Client,
     registry_url: Url,
@@ -21,7 +21,7 @@ type ClientResult<T> = Result<T, ClientError<reqwest::Error>>;
 
 impl<TP> Client<TP>
 where
-    TP: TokenProvider<Error = reqwest::Error>,
+    TP: TokenProvider,
 {
     /// Create a new client instance.
     pub fn new(client: reqwest::Client, registry_url: Url, token_provider: TP) -> Self {

@@ -5,12 +5,13 @@ use crate::{
 use async_trait::async_trait;
 
 /// A token provider, using an Access Token as static token.
+#[derive(Clone)]
 pub struct AccessTokenProvider {
     pub user: String,
     pub token: String,
 }
 
-#[async_trait(?Send)]
+#[async_trait]
 impl TokenProvider for AccessTokenProvider {
     type Error = reqwest::Error;
 

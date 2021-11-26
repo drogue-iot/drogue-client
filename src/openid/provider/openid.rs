@@ -98,7 +98,7 @@ impl OpenIdTokenProvider {
 }
 
 #[cfg(feature = "reqwest")]
-#[async_trait(?Send)]
+#[async_trait]
 impl TokenProvider for OpenIdTokenProvider {
     type Error = reqwest::Error;
 
