@@ -10,7 +10,7 @@ pub struct AccessTokenProvider {
     pub token: String,
 }
 
-#[async_trait]
+#[async_trait(?Send)]
 impl TokenProvider for AccessTokenProvider {
     type Error = reqwest::Error;
 
