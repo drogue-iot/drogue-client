@@ -32,3 +32,18 @@ impl TokenProvider for NoTokenProvider {
         Ok(None)
     }
 }
+
+#[async_trait]
+impl<T> TokenProvider for Option<T>
+where
+    T: TokenProvider + Sync,
+{
+    type Error = T::Error;
+
+    async fn provide_access_token(&self) -> Result<Option<Credentials>, ClientError<Self::Error>> {
+        match self {
+            None => Ok(None),
+            Some(provider) => provider.provide_access_token().await,
+        }
+    }
+}
