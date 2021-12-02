@@ -155,18 +155,42 @@ pub trait CommonMetadataMut: CommonMetadata {
     fn set_deletion_timestamp(&mut self, deletion_timestamp: Option<DateTime<Utc>>);
     fn set_finalizers(&mut self, finalizers: Vec<String>);
 
+    fn name_mut(&mut self) -> &mut String;
+    fn uid_mut(&mut self) -> &mut String;
+    fn labels_mut(&mut self) -> &mut HashMap<String, String>;
+    fn annotations_mut(&mut self) -> &mut HashMap<String, String>;
+    fn creation_timestamp_mut(&mut self) -> &mut DateTime<Utc>;
+    fn resource_version_mut(&mut self) -> &mut String;
+    fn generation_mut(&mut self) -> &mut u64;
+    fn deletion_timestamp_mut(&mut self) -> &mut Option<DateTime<Utc>>;
+    fn finalizers_mut(&mut self) -> &mut Vec<String>;
+
     /// ensures that the finalizer is set
     ///
     /// Returns `true` if the finalizer was added and the resource must be stored
     fn ensure_finalizer(&mut self, finalizer: &str) -> bool {
-        if !self.finalizers().iter().any(|r| r == finalizer) {
-            let mut finalizers = self.finalizers().clone();
+        let finalizers = self.finalizers_mut();
+        if !finalizers.iter().any(|r| r == finalizer) {
             finalizers.push(finalizer.into());
-            self.set_finalizers(finalizers);
             true
         } else {
             false
         }
+    }
+
+    /// remove the finalizer from the list of finalizers
+    ///
+    /// Returns `true` if the finalizer was present before.
+    fn remove_finalizer(&mut self, finalizer: &str) -> bool {
+        let mut found = false;
+        self.finalizers_mut().retain(|f| match f == finalizer {
+            true => {
+                found = true;
+                false
+            }
+            false => true,
+        });
+        found
     }
 }
 
@@ -230,6 +254,34 @@ macro_rules! common_metadata {
             fn set_finalizers(&mut self, finalizers: Vec<String>) {
                 self.finalizers = finalizers;
             }
+
+            fn name_mut(&mut self) -> &mut String {
+                &mut self.name
+            }
+            fn uid_mut(&mut self) -> &mut String {
+                &mut self.uid
+            }
+            fn labels_mut(&mut self) -> &mut HashMap<String, String> {
+                &mut self.labels
+            }
+            fn annotations_mut(&mut self) -> &mut HashMap<String, String> {
+                &mut self.annotations
+            }
+            fn creation_timestamp_mut(&mut self) -> &mut DateTime<chrono::Utc> {
+                &mut self.creation_timestamp
+            }
+            fn resource_version_mut(&mut self) -> &mut String {
+                &mut self.resource_version
+            }
+            fn generation_mut(&mut self) -> &mut u64 {
+                &mut self.generation
+            }
+            fn deletion_timestamp_mut(&mut self) -> &mut Option<DateTime<chrono::Utc>> {
+                &mut self.deletion_timestamp
+            }
+            fn finalizers_mut(&mut self) -> &mut Vec<String> {
+                &mut self.finalizers
+            }
         }
     };
 }
@@ -270,5 +322,11 @@ mod test {
             meta_ref.ensure_finalizer("Bar");
         }
         assert_eq!(meta.finalizers, vec!["Foo".to_string(), "Bar".to_string()]);
+        {
+            let meta_ref: &mut dyn CommonMetadataMut = &mut meta;
+            assert!(!meta_ref.remove_finalizer("Abc"));
+            assert!(meta_ref.remove_finalizer("Foo"));
+        }
+        assert_eq!(meta.finalizers, vec!["Bar".to_string()]);
     }
 }
