@@ -5,8 +5,10 @@ pub use downstream::*;
 pub use kafka::*;
 
 use crate::{
-    dialect, meta::v1::NonScopedMetadata, serde::Base64Standard, translator, Dialect, Section,
-    Translator,
+    dialect,
+    meta::v1::{CommonMetadata, CommonMetadataMut, NonScopedMetadata},
+    serde::Base64Standard,
+    translator, Dialect, Section, Translator,
 };
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
@@ -25,6 +27,18 @@ pub struct Application {
 }
 
 translator!(Application);
+
+impl AsRef<dyn CommonMetadata> for Application {
+    fn as_ref(&self) -> &(dyn CommonMetadata + 'static) {
+        &self.metadata
+    }
+}
+
+impl AsMut<dyn CommonMetadataMut> for Application {
+    fn as_mut(&mut self) -> &mut (dyn CommonMetadataMut + 'static) {
+        &mut self.metadata
+    }
+}
 
 /// The application's trust-anchors.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Eq, PartialEq)]

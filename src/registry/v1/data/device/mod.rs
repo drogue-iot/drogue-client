@@ -1,6 +1,8 @@
 use crate::{
-    attribute, dialect, meta::v1::ScopedMetadata, serde::is_default, translator, Dialect, Section,
-    Translator,
+    attribute, dialect,
+    meta::v1::{CommonMetadata, CommonMetadataMut, ScopedMetadata},
+    serde::is_default,
+    translator, Dialect, Section, Translator,
 };
 use core::fmt::{self, Formatter};
 use serde::{de::MapAccess, Deserialize, Deserializer, Serialize};
@@ -20,6 +22,18 @@ pub struct Device {
 }
 
 translator!(Device);
+
+impl AsRef<dyn CommonMetadata> for Device {
+    fn as_ref(&self) -> &(dyn CommonMetadata + 'static) {
+        &self.metadata
+    }
+}
+
+impl AsMut<dyn CommonMetadataMut> for Device {
+    fn as_mut(&mut self) -> &mut (dyn CommonMetadataMut + 'static) {
+        &mut self.metadata
+    }
+}
 
 impl Device {
     /// Validate if a device is enabled
