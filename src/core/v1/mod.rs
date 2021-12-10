@@ -141,6 +141,16 @@ impl Conditions {
         );
         self
     }
+
+    /// Clear the provided condition and re-aggregate the ready state.
+    pub fn clear_ready<T>(mut self, r#type: T) -> Self
+    where
+        T: AsRef<str>,
+    {
+        let r#type = r#type.as_ref();
+        self.0.retain(|c| c.r#type != r#type);
+        self.aggregate_ready()
+    }
 }
 
 impl Deref for Conditions {
@@ -306,5 +316,25 @@ mod test {
         );
         conditions.update("Foo", true);
         conditions.update("Bar", Some(true));
+    }
+
+    #[test]
+    fn clear_ready() {
+        let mut conditions = Conditions::default();
+        conditions.update(
+            "SomeReady",
+            ConditionStatus {
+                status: None,
+                reason: None,
+                message: None,
+            },
+        );
+        conditions = conditions.aggregate_ready();
+        assert_eq!(conditions.len(), 2);
+        conditions = conditions.clear_ready("SomeReady");
+        assert_eq!(conditions.len(), 1);
+        let c = conditions.get(0).unwrap();
+        assert_eq!(c.r#type, "Ready");
+        assert_eq!(c.status, "True");
     }
 }
