@@ -195,13 +195,22 @@ pub trait CommonMetadataMut: CommonMetadata {
 }
 
 pub trait CommonMetadataExt {
+    /// Check if a label is present
     fn has_label<L: AsRef<str>>(&self, label: L) -> bool;
+    /// Check if a label is present and "true"
+    fn has_label_flag<L: AsRef<str>>(&self, label: L) -> bool;
 }
 
 impl<C: CommonMetadata> CommonMetadataExt for C {
-    /// Check if a label is present
     fn has_label<L: AsRef<str>>(&self, label: L) -> bool {
         self.labels().contains_key(label.as_ref())
+    }
+
+    fn has_label_flag<L: AsRef<str>>(&self, label: L) -> bool {
+        self.labels()
+            .get(label.as_ref())
+            .map(|v| v.eq_ignore_ascii_case("true"))
+            .unwrap_or(false)
     }
 }
 
