@@ -194,6 +194,17 @@ pub trait CommonMetadataMut: CommonMetadata {
     }
 }
 
+pub trait CommonMetadataExt {
+    fn has_label<L: AsRef<str>>(&self, label: L) -> bool;
+}
+
+impl<C: CommonMetadata> CommonMetadataExt for C {
+    /// Check if a label is present
+    fn has_label<L: AsRef<str>>(&self, label: L) -> bool {
+        self.labels().contains_key(label.as_ref())
+    }
+}
+
 macro_rules! common_metadata {
     ($name:ty) => {
         impl CommonMetadata for $name {
