@@ -87,7 +87,7 @@ where
     async fn create_response<T: DeserializeOwned>(response: Response) -> ClientResult<T> {
         log::debug!("Eval create response: {:#?}", response);
         match response.status() {
-            StatusCode::CREATED => Ok(response.json().await?),
+            StatusCode::OK => Ok(response.json().await?),
             _ => Self::default_response(response).await,
         }
     }
