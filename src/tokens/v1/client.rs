@@ -94,8 +94,8 @@ where
 
     // TODO : refactor - it already exists in registry::client
     pub async fn delete_token<A>(&self, prefix: A, context: Context) -> ClientResult<bool>
-        where
-            A: AsRef<str>,
+    where
+        A: AsRef<str>,
     {
         let req = self
             .client
@@ -118,9 +118,9 @@ where
 
     // TODO : refactor - it already exists in registry::client
     async fn default_response<T>(response: Response) -> ClientResult<T> {
-    match response.status() {
-        code if code.is_client_error() => Err(ClientError::Service(response.json().await?)),
-        code => Err(ClientError::Request(format!("Unexpected code {:?}", code))),
+        match response.status() {
+            code if code.is_client_error() => Err(ClientError::Service(response.json().await?)),
+            code => Err(ClientError::Request(format!("Unexpected code {:?}", code))),
+        }
     }
-}
 }
