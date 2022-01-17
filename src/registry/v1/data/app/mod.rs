@@ -4,6 +4,7 @@ mod publish;
 
 pub use downstream::*;
 pub use kafka::*;
+pub use publish::*;
 
 use crate::{
     dialect,
