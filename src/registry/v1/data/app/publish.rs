@@ -83,13 +83,13 @@ mod test {
                     },
                     "then":  [
                         {
-                            "setHeader": {
-                                "name": "header1",
+                            "setExtension": {
+                                "name": "ext1",
                                 "value": "value1",
                             },
                         },
                         {
-                            "removeHeader": "header2",
+                            "removeExtension": "ext2",
                         },
                     ],
                 }
@@ -107,11 +107,11 @@ mod test {
                         ])))
                     ]),
                     then: vec![
-                        Step::SetHeader {
-                            name: "header1".to_string(),
+                        Step::SetExtension {
+                            name: "ext1".to_string(),
                             value: "value1".to_string()
                         },
-                        Step::RemoveHeader("header2".to_string()),
+                        Step::RemoveExtension("ext2".to_string()),
                     ],
                 }],
             },
