@@ -41,6 +41,8 @@ pub enum Step {
     Drop,
     // Reject the event.
     Reject(String),
+    // Stop processing and accept the event.
+    Break,
     // Set (replace or add) a cloud events attribute.
     SetAttribute { name: String, value: String },
     // Remove a cloud events attribute. Ensure that you don't remove a require one.
@@ -81,7 +83,7 @@ mod test {
                             } },
                         ]
                     },
-                    "then":  [
+                    "then": [
                         {
                             "setExtension": {
                                 "name": "ext1",
