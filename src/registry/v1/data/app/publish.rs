@@ -37,7 +37,13 @@ impl Default for When {
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum Step {
+    // Drop message
+    Drop,
+    // Reject message
+    Reject(String),
+    // Set (replace or add) a header
     SetHeader { name: String, value: String },
+    // Remove a header
     RemoveHeader(String),
 }
 
