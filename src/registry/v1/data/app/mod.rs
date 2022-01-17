@@ -1,5 +1,6 @@
 mod downstream;
 mod kafka;
+mod publish;
 
 pub use downstream::*;
 pub use kafka::*;
