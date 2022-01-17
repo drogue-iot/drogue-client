@@ -37,14 +37,18 @@ impl Default for When {
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum Step {
-    // Drop message
+    // Drop the event.
     Drop,
-    // Reject message
+    // Reject the event.
     Reject(String),
-    // Set (replace or add) a header
-    SetHeader { name: String, value: String },
-    // Remove a header
-    RemoveHeader(String),
+    // Set (replace or add) a cloud events attribute.
+    SetAttribute { name: String, value: String },
+    // Remove a cloud events attribute. Ensure that you don't remove a require one.
+    RemoveAttribute(String),
+    // Set (replace or add) an extension.
+    SetExtension { name: String, value: String },
+    // Remove an extension.
+    RemoveExtension(String),
 }
 
 dialect!(PublishSpec[crate::Section::Spec => "publish"]);
