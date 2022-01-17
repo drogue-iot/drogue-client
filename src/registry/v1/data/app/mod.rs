@@ -8,7 +8,7 @@ use crate::{
     dialect,
     meta::v1::{CommonMetadata, CommonMetadataMut, NonScopedMetadata},
     serde::Base64Standard,
-    translator, Dialect, Section, Translator,
+    translator, Section, Translator,
 };
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};

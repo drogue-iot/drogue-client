@@ -1,4 +1,4 @@
-use crate::{core, dialect, Dialect, Section};
+use crate::{core, dialect, Section};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 

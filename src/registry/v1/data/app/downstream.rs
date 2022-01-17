@@ -1,4 +1,4 @@
-use crate::{dialect, Dialect, Section};
+use crate::{dialect, Section};
 use base64_serde::Deserializer;
 use core::fmt;
 use serde::de::{MapAccess, Visitor};

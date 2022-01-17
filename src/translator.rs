@@ -110,7 +110,7 @@ pub trait Dialect {
 /// Implements the [`Dialect`] trait for a structure.
 ///
 /// ```rust
-/// use drogue_client::{dialect, Dialect, Section};
+/// use drogue_client::{dialect, Section};
 ///
 /// pub struct FooSpec {
 /// }
@@ -120,12 +120,12 @@ pub trait Dialect {
 #[macro_export]
 macro_rules! dialect {
     ($dialect:ty [ $section:expr => $key:literal ]) => {
-        impl Dialect for $dialect {
+        impl $crate::Dialect for $dialect {
             fn key() -> &'static str {
                 $key
             }
 
-            fn section() -> Section {
+            fn section() -> $crate::Section {
                 $section
             }
         }
