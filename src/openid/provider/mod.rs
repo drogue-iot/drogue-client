@@ -4,6 +4,7 @@ mod openid;
 pub use self::access_token::*;
 pub use self::openid::*;
 use std::convert::Infallible;
+use std::fmt::Debug;
 
 use crate::error::ClientError;
 use async_trait::async_trait;
@@ -15,7 +16,7 @@ pub enum Credentials {
 }
 
 #[async_trait]
-pub trait TokenProvider: Clone + Send + Sync {
+pub trait TokenProvider: Clone + Send + Sync + Debug {
     type Error: std::error::Error + Send + Sync + 'static;
 
     async fn provide_access_token(
@@ -23,7 +24,7 @@ pub trait TokenProvider: Clone + Send + Sync {
     ) -> Result<Option<Credentials>, crate::error::ClientError<Self::Error>>;
 }
 
-#[derive(Clone, Copy)]
+#[derive(Debug, Clone, Copy)]
 pub struct NoTokenProvider;
 
 #[async_trait]

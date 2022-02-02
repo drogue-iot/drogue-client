@@ -1,6 +1,9 @@
-use crate::openid::{Credentials, TokenProvider};
-use crate::{context::Context, error::ClientError};
+use crate::{
+    error::ClientError,
+    openid::{Credentials, TokenProvider},
+};
 use async_trait::async_trait;
+use tracing::instrument;
 
 /// Allows injecting tokens.
 #[async_trait]
@@ -8,7 +11,6 @@ pub trait TokenInjector: Sized + Send + Sync {
     async fn inject_token<TP>(
         self,
         token_provider: &TP,
-        context: Context,
     ) -> Result<Self, ClientError<reqwest::Error>>
     where
         TP: TokenProvider;
@@ -17,17 +19,15 @@ pub trait TokenInjector: Sized + Send + Sync {
 /// Injects tokens into a request by setting the authorization header to a "bearer" token.
 #[async_trait]
 impl TokenInjector for reqwest::RequestBuilder {
+    #[instrument(skip(token_provider))]
     async fn inject_token<TP>(
         self,
         token_provider: &TP,
-        context: Context,
     ) -> Result<Self, ClientError<reqwest::Error>>
     where
         TP: TokenProvider,
     {
-        if let Some(token) = context.provided_token {
-            Ok(self.bearer_auth(token))
-        } else if let Some(credentials) = token_provider
+        if let Some(credentials) = token_provider
             .provide_access_token()
             .await
             .map_err(|err| ClientError::Token(Box::new(err)))?
