@@ -1,4 +1,5 @@
 use super::data::*;
+use crate::core::WithTracing;
 use crate::openid::TokenProvider;
 use crate::{error::ClientError, openid::TokenInjector, Translator};
 use futures::{stream, StreamExt, TryStreamExt};
@@ -73,6 +74,7 @@ where
         let req = self
             .client
             .get(self.url(application.as_ref(), None)?)
+            .propagate_current_context()
             .inject_token(&self.token_provider)
             .await?;
 
@@ -95,6 +97,7 @@ where
         let req = self
             .client
             .get(self.url(application.as_ref(), Some(device.as_ref()))?)
+            .propagate_current_context()
             .inject_token(&self.token_provider)
             .await?;
 
@@ -137,6 +140,7 @@ where
         let req = self
             .client
             .get(self.url(application.as_ref(), Some(device.as_ref()))?)
+            .propagate_current_context()
             .inject_token(&self.token_provider)
             .await?;
 
@@ -178,6 +182,7 @@ where
             .client
             .put(self.url(&application.metadata.name, None)?)
             .json(&application)
+            .propagate_current_context()
             .inject_token(&self.token_provider)
             .await?;
 
@@ -193,6 +198,7 @@ where
             .client
             .put(self.url(&device.metadata.application, Some(&device.metadata.name))?)
             .json(&device)
+            .propagate_current_context()
             .inject_token(&self.token_provider)
             .await?;
 
