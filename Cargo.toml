@@ -40,4 +40,3 @@ telemetry = ["opentelemetry", "opentelemetry-http", "http"]
 
 [dev-dependencies]
 anyhow = "1"
-maplit = "1"
