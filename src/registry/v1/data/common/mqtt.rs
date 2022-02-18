@@ -1,12 +1,14 @@
-use crate::serde::is_default;
+use crate::{dialect, serde::is_default, Section};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct Mqtt {
+pub struct MqttSpec {
     #[serde(default, skip_serializing_if = "is_default")]
     pub dialect: MqttDialect,
 }
+
+dialect!(MqttSpec [Section::Spec => "mqtt"]);
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -33,7 +35,7 @@ mod test {
     #[test]
     fn test_default() {
         assert_eq!(
-            Mqtt {
+            MqttSpec {
                 dialect: MqttDialect::DrogueV1
             },
             serde_json::from_value(json!({})).unwrap()
@@ -43,7 +45,7 @@ mod test {
     #[test]
     fn test_explicit_v1() {
         assert_eq!(
-            Mqtt {
+            MqttSpec {
                 dialect: MqttDialect::DrogueV1
             },
             serde_json::from_value(json!({
@@ -58,7 +60,7 @@ mod test {
     #[test]
     fn test_plain_true() {
         assert_eq!(
-            Mqtt {
+            MqttSpec {
                 dialect: MqttDialect::PlainTopic {
                     device_prefix: true
                 }
