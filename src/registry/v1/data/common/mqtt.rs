@@ -17,7 +17,10 @@ pub enum MqttDialect {
     #[serde(rename = "drogue/v1")]
     DrogueV1,
     #[serde(rename_all = "camelCase")]
-    PlainTopic { device_prefix: bool },
+    PlainTopic {
+        #[serde(default, skip_serializing_if = "is_default")]
+        device_prefix: bool,
+    },
 }
 
 impl Default for MqttDialect {
@@ -51,6 +54,23 @@ mod test {
             serde_json::from_value(json!({
                 "dialect": {
                     "type": "drogue/v1",
+                }
+            }))
+            .unwrap()
+        )
+    }
+
+    #[test]
+    fn test_plain_default() {
+        assert_eq!(
+            MqttSpec {
+                dialect: MqttDialect::PlainTopic {
+                    device_prefix: false
+                }
+            },
+            serde_json::from_value(json!({
+                "dialect":{
+                    "type": "plainTopic",
                 }
             }))
             .unwrap()
