@@ -61,7 +61,8 @@ pub enum Step {
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ExternalEndpoint {
-    pub url: Url,
+    pub method: String,
+    pub url: String,
     #[serde(default)]
     pub tls: Option<TlsOptions>,
     #[serde(default)]
