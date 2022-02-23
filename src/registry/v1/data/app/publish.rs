@@ -1,7 +1,6 @@
 use crate::{dialect, serde::is_default};
-use http::header::HeaderName;
 use serde::{Deserialize, Serialize};
-use url::Url;
+use std::time::Duration;
 
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -70,6 +69,8 @@ pub struct ExternalEndpoint {
     pub auth: Authentication,
     #[serde(default)]
     pub headers: Vec<Header>,
+    #[serde(with = "humantime_serde")]
+    pub timeout: Option<Duration>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
