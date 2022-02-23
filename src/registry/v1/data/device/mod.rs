@@ -224,11 +224,11 @@ impl Dialect for DeviceSpecCommands {
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
 pub enum Command {
     #[serde(rename = "external")]
-    External(ExternalEndpoint),
+    External(ExternalCommandEndpoint),
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
-pub struct ExternalEndpoint {
+pub struct ExternalCommandEndpoint {
     pub r#type: Option<String>,
     pub url: String,
     #[serde(default, skip_serializing_if = "String::is_empty")]
