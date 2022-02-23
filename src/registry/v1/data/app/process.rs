@@ -7,12 +7,24 @@ use std::time::Duration;
 pub struct PublishSpec {
     #[serde(default)]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub rules: Vec<PublishRule>,
+    pub rules: Vec<Rule>,
 }
+
+dialect!(PublishSpec[crate::Section::Spec => "publish"]);
 
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct PublishRule {
+pub struct CommandSpec {
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub rules: Vec<Rule>,
+}
+
+dialect!(CommandSpec[crate::Section::Spec => "command"]);
+
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Rule {
     #[serde(default)]
     pub when: When,
     #[serde(default)]
@@ -110,8 +122,6 @@ impl Default for Authentication {
     }
 }
 
-dialect!(PublishSpec[crate::Section::Spec => "publish"]);
-
 #[cfg(test)]
 mod test {
 
@@ -157,7 +167,7 @@ mod test {
         .unwrap();
         assert_eq!(
             PublishSpec {
-                rules: vec![PublishRule {
+                rules: vec![Rule {
                     when: When::And(vec![
                         When::IsChannel("chan1".to_string()),
                         When::Not(Box::new(When::Or(vec![

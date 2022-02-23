@@ -1,10 +1,10 @@
 mod downstream;
 mod kafka;
-mod publish;
+mod process;
 
 pub use downstream::*;
 pub use kafka::*;
-pub use publish::*;
+pub use process::*;
 
 use crate::{
     dialect,
