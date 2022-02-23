@@ -1,4 +1,5 @@
 use crate::{dialect, serde::is_default};
+use http::header::HeaderName;
 use serde::{Deserialize, Serialize};
 use url::Url;
 
@@ -91,8 +92,14 @@ pub struct TlsOptions {
 #[serde(rename_all = "camelCase")]
 pub enum Authentication {
     None,
-    Basic { username: String, password: String },
-    Bearer { token: String },
+    Basic {
+        username: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        password: Option<String>,
+    },
+    Bearer {
+        token: String,
+    },
 }
 
 impl Default for Authentication {
