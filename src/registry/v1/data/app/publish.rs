@@ -1,5 +1,6 @@
-use crate::dialect;
+use crate::{dialect, serde::is_default};
 use serde::{Deserialize, Serialize};
+use url::Url;
 
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -37,20 +38,66 @@ impl Default for When {
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum Step {
-    // Drop the event.
+    /// Drop the event.
     Drop,
-    // Reject the event.
+    /// Reject the event.
     Reject(String),
-    // Stop processing and accept the event.
+    /// Stop processing and accept the event.
     Break,
-    // Set (replace or add) a cloud events attribute.
+    /// Set (replace or add) a cloud events attribute.
     SetAttribute { name: String, value: String },
-    // Remove a cloud events attribute. Ensure that you don't remove a require one.
+    /// Remove a cloud events attribute. Ensure that you don't remove a require one.
     RemoveAttribute(String),
-    // Set (replace or add) an extension.
+    /// Set (replace or add) an extension.
     SetExtension { name: String, value: String },
-    // Remove an extension.
+    /// Remove an extension.
     RemoveExtension(String),
+    /// Validate the event using an external endpoint.
+    Validate(ExternalEndpoint),
+    /// Enrich the event using an external endpoint.
+    Enrich(ExternalEndpoint),
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ExternalEndpoint {
+    pub url: Url,
+    #[serde(default)]
+    pub tls: Option<TlsOptions>,
+    #[serde(default)]
+    pub auth: Authentication,
+    #[serde(default)]
+    pub headers: Vec<Header>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Header {
+    pub name: String,
+    pub value: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TlsOptions {
+    #[serde(default)]
+    pub insecure: bool,
+    #[serde(default, skip_serializing_if = "is_default")]
+    pub certificate: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum Authentication {
+    None,
+    Basic { username: String, password: String },
+    Bearer { token: String },
+}
+
+impl Default for Authentication {
+    fn default() -> Self {
+        Self::None
+    }
 }
 
 dialect!(PublishSpec[crate::Section::Spec => "publish"]);
