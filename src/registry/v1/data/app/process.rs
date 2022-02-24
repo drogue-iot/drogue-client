@@ -82,6 +82,7 @@ pub struct ExternalEndpoint {
     pub auth: Authentication,
     #[serde(default)]
     pub headers: Vec<Header>,
+    #[serde(default)]
     #[serde(with = "humantime_serde")]
     pub timeout: Option<Duration>,
 }
