@@ -23,7 +23,7 @@ mod tracing {
         fn propagate_context(self, cx: &Context) -> Self {
             let headers = opentelemetry::global::get_text_map_propagator(|prop| {
                 let mut injector = HeaderInjector::new();
-                prop.inject_context(&cx, &mut injector);
+                prop.inject_context(cx, &mut injector);
                 injector.0
             });
             self.headers(headers)

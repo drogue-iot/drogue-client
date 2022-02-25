@@ -117,13 +117,13 @@ where
         A: AsRef<str> + Debug,
         D: AsRef<str> + Debug,
     {
-        Ok(stream::iter(devices)
+        stream::iter(devices)
             .then(|device| self.get_device(application.as_ref(), device))
             // filter out missing devices
             .filter_map(|device| async { device.transpose() })
             // collect to a map
             .try_collect()
-            .await?)
+            .await
     }
 
     /// Get a device by name, resolving all first level gateways.
