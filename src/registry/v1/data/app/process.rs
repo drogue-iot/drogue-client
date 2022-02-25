@@ -65,9 +65,39 @@ pub enum Step {
     /// Remove an extension.
     RemoveExtension(String),
     /// Validate the event using an external endpoint.
-    Validate(ExternalEndpoint),
+    Validate(ValidateSpec),
     /// Enrich the event using an external endpoint.
-    Enrich(ExternalEndpoint),
+    Enrich(EnrichSpec),
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct EnrichSpec {
+    #[serde(default)]
+    #[serde(skip_serializing_if = "is_default")]
+    pub response_type: ResponseType,
+    pub endpoint: ExternalEndpoint,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ValidateSpec {
+    pub endpoint: ExternalEndpoint,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ResponseType {
+    /// Expect a cloud event, fails otherwise.
+    CloudEvent,
+    /// Only consume payload, keep metadata, except content-type.
+    Raw,
+}
+
+impl Default for ResponseType {
+    fn default() -> Self {
+        Self::CloudEvent
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
