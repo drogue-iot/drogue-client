@@ -132,6 +132,8 @@ pub enum ResponseType {
     CloudEvent,
     /// Only consume payload, keep metadata, except content-type.
     Raw,
+    /// Assume content to be a structured mode cloud event, ignoring the content type.
+    AssumeStructuredCloudEvent,
 }
 
 impl Default for ResponseType {
