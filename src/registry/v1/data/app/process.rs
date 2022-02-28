@@ -90,6 +90,7 @@ pub struct ValidateSpec {
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[serde(tag = "type")]
 pub enum RequestType {
     /// Send a cloud event
     CloudEvent {
@@ -122,6 +123,7 @@ impl Default for ContentMode {
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[serde(tag = "type")]
 pub enum ResponseType {
     /// Expect a cloud event, fails otherwise.
     CloudEvent,
@@ -271,9 +273,11 @@ mod test {
             },
             serde_json::from_value(json!({
                 "request": {
-                    "cloudEvent": {}
+                    "type": "cloudEvent",
                 },
-                "response": "cloudEvent",
+                "response": {
+                    "type": "cloudEvent",
+                },
                 "endpoint": {
                     "url": "http://localhost:1234"
                 }
@@ -301,11 +305,12 @@ mod test {
             },
             serde_json::from_value(json!({
                 "request": {
-                    "cloudEvent": {
-                        "mode": "structured"
-                    }
+                    "type": "cloudEvent",
+                    "mode": "structured",
                 },
-                "response": "cloudEvent",
+                "response": {
+                    "type": "cloudEvent",
+                },
                 "endpoint": {
                     "url": "http://localhost:1234"
                 }
