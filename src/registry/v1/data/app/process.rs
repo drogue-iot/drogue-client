@@ -85,6 +85,9 @@ pub struct EnrichSpec {
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ValidateSpec {
+    #[serde(default)]
+    #[serde(skip_serializing_if = "is_default")]
+    pub request: RequestType,
     pub endpoint: ExternalEndpoint,
 }
 
