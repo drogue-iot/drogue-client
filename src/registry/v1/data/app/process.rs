@@ -75,7 +75,10 @@ pub enum Step {
 pub struct EnrichSpec {
     #[serde(default)]
     #[serde(skip_serializing_if = "is_default")]
-    pub response_type: ResponseType,
+    pub request: RequestType,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "is_default")]
+    pub response: ResponseType,
     pub endpoint: ExternalEndpoint,
 }
 
@@ -83,6 +86,38 @@ pub struct EnrichSpec {
 #[serde(rename_all = "camelCase")]
 pub struct ValidateSpec {
     pub endpoint: ExternalEndpoint,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum RequestType {
+    /// Send a cloud event
+    CloudEvent {
+        #[serde(default)]
+        #[serde(skip_serializing_if = "is_default")]
+        mode: ContentMode,
+    },
+}
+
+impl Default for RequestType {
+    fn default() -> Self {
+        Self::CloudEvent {
+            mode: Default::default(),
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ContentMode {
+    Binary,
+    Structured,
+}
+
+impl Default for ContentMode {
+    fn default() -> Self {
+        Self::Binary
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -216,6 +251,66 @@ mod test {
                 }],
             },
             spec
+        );
+    }
+
+    #[test]
+    fn test_deser_1() {
+        assert_eq!(
+            EnrichSpec {
+                request: Default::default(),
+                response: Default::default(),
+                endpoint: ExternalEndpoint {
+                    method: None,
+                    url: "http://localhost:1234".to_string(),
+                    tls: None,
+                    auth: Default::default(),
+                    headers: vec![],
+                    timeout: None
+                }
+            },
+            serde_json::from_value(json!({
+                "request": {
+                    "cloudEvent": {}
+                },
+                "response": "cloudEvent",
+                "endpoint": {
+                    "url": "http://localhost:1234"
+                }
+            }))
+            .unwrap()
+        );
+    }
+
+    #[test]
+    fn test_deser_2() {
+        assert_eq!(
+            EnrichSpec {
+                request: RequestType::CloudEvent {
+                    mode: ContentMode::Structured
+                },
+                response: Default::default(),
+                endpoint: ExternalEndpoint {
+                    method: None,
+                    url: "http://localhost:1234".to_string(),
+                    tls: None,
+                    auth: Default::default(),
+                    headers: vec![],
+                    timeout: None
+                }
+            },
+            serde_json::from_value(json!({
+                "request": {
+                    "cloudEvent": {
+                        "mode": "structured"
+                    }
+                },
+                "response": "cloudEvent",
+                "endpoint": {
+                    "url": "http://localhost:1234"
+                }
+            }))
+            .unwrap()
         );
     }
 }
