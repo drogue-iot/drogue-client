@@ -1,6 +1,5 @@
-use crate::{dialect, serde::is_default};
+use crate::{dialect, registry::v1::ExternalEndpoint, serde::is_default};
 use serde::{Deserialize, Serialize};
-use std::time::Duration;
 
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -139,59 +138,6 @@ pub enum ResponseType {
 impl Default for ResponseType {
     fn default() -> Self {
         Self::CloudEvent
-    }
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct ExternalEndpoint {
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub method: Option<String>,
-    pub url: String,
-    #[serde(default)]
-    pub tls: Option<TlsOptions>,
-    #[serde(default)]
-    pub auth: Authentication,
-    #[serde(default)]
-    pub headers: Vec<Header>,
-    #[serde(default)]
-    #[serde(with = "humantime_serde")]
-    pub timeout: Option<Duration>,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Header {
-    pub name: String,
-    pub value: String,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, Hash)]
-#[serde(rename_all = "camelCase")]
-pub struct TlsOptions {
-    #[serde(default)]
-    pub insecure: bool,
-    #[serde(default, skip_serializing_if = "is_default")]
-    pub certificate: Option<String>,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum Authentication {
-    None,
-    Basic {
-        username: String,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        password: Option<String>,
-    },
-    Bearer {
-        token: String,
-    },
-}
-
-impl Default for Authentication {
-    fn default() -> Self {
-        Self::None
     }
 }
 

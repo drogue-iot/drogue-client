@@ -1,15 +1,18 @@
 mod downstream;
 mod kafka;
+mod knative;
 mod process;
 
 pub use downstream::*;
 pub use kafka::*;
+pub use knative::*;
 pub use process::*;
+use std::time::Duration;
 
 use crate::{
     dialect,
     meta::v1::{CommonMetadata, CommonMetadataMut, NonScopedMetadata},
-    serde::Base64Standard,
+    serde::{is_default, Base64Standard},
     translator, Section, Translator,
 };
 use chrono::{DateTime, Utc};
@@ -82,4 +85,57 @@ pub enum ApplicationStatusTrustAnchorEntry {
         error: String,
         message: String,
     },
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ExternalEndpoint {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub method: Option<String>,
+    pub url: String,
+    #[serde(default)]
+    pub tls: Option<TlsOptions>,
+    #[serde(default)]
+    pub auth: Authentication,
+    #[serde(default)]
+    pub headers: Vec<Header>,
+    #[serde(default)]
+    #[serde(with = "humantime_serde")]
+    pub timeout: Option<Duration>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Header {
+    pub name: String,
+    pub value: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, Hash)]
+#[serde(rename_all = "camelCase")]
+pub struct TlsOptions {
+    #[serde(default)]
+    pub insecure: bool,
+    #[serde(default, skip_serializing_if = "is_default")]
+    pub certificate: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum Authentication {
+    None,
+    Basic {
+        username: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        password: Option<String>,
+    },
+    Bearer {
+        token: String,
+    },
+}
+
+impl Default for Authentication {
+    fn default() -> Self {
+        Self::None
+    }
 }
