@@ -9,6 +9,11 @@ pub struct KnativeAppSpec {
     #[serde(default)]
     #[serde(skip_serializing_if = "is_default")]
     pub disabled: bool,
+
+    /// Override the default group id of `knative-source`.
+    #[serde(default)]
+    pub group_id: Option<String>,
+
     pub endpoint: ExternalEndpoint,
 }
 
