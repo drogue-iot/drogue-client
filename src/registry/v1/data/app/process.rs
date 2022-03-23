@@ -269,4 +269,28 @@ mod test {
             .unwrap()
         );
     }
+
+    #[test]
+    fn test_deser_32() {
+        let spec: PublishSpec = serde_json::from_value(json!({
+            "rules":[
+                {
+                    "when": {
+                        "not": "always",
+                    },
+                    "then": [],
+                }
+            ]
+        }))
+        .unwrap();
+        assert_eq!(
+            PublishSpec {
+                rules: vec![Rule {
+                    when: When::Not(Box::new(When::Always)),
+                    then: vec![],
+                }],
+            },
+            spec
+        );
+    }
 }
