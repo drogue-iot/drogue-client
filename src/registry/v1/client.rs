@@ -35,7 +35,7 @@ where
         }
     }
 
-    fn url(&self, application: &str, device: Option<&str>) -> ClientResult<Url> {
+    fn url(&self, application: Option<&str>, device: Option<&str>) -> ClientResult<Url> {
         let mut url = self.registry_url.clone();
 
         {
@@ -44,8 +44,10 @@ where
                 .map_err(|_| ClientError::Request("Failed to get paths".into()))?;
 
             path.extend(&["api", "registry", "v1alpha1", "apps"]);
-            if !application.is_empty() {
-                path.push(application);
+            if let Some(application) = application {
+                if !application.is_empty() {
+                    path.push(application);
+                }
             }
 
             if let Some(device) = device {
@@ -57,6 +59,25 @@ where
         }
 
         Ok(url)
+    }
+
+    /// List applications.
+    ///
+    /// If no applications exists, this function will return an empty Vec, otherwise it will return
+    /// a list of applications.
+    ///
+    /// If the user does not have access to the API, the server side may return "not found"
+    /// as a response instead of "forbidden".
+    #[instrument]
+    pub async fn list_apps(&self) -> ClientResult<Option<Vec<Application>>> {
+        let req = self
+            .client
+            .get(self.url(None, None)?)
+            .propagate_current_context()
+            .inject_token(&self.token_provider)
+            .await?;
+
+        Self::get_response(req.send().await?).await
     }
 
     /// Get an application by name.
@@ -73,7 +94,7 @@ where
     {
         let req = self
             .client
-            .get(self.url(application.as_ref(), None)?)
+            .get(self.url(Some(application.as_ref()), None)?)
             .propagate_current_context()
             .inject_token(&self.token_provider)
             .await?;
@@ -96,7 +117,7 @@ where
     {
         let req = self
             .client
-            .get(self.url(application.as_ref(), Some(device.as_ref()))?)
+            .get(self.url(Some(application.as_ref()), Some(device.as_ref()))?)
             .propagate_current_context()
             .inject_token(&self.token_provider)
             .await?;
@@ -139,7 +160,7 @@ where
     {
         let req = self
             .client
-            .get(self.url(application.as_ref(), Some(device.as_ref()))?)
+            .get(self.url(Some(application.as_ref()), Some(device.as_ref()))?)
             .propagate_current_context()
             .inject_token(&self.token_provider)
             .await?;
@@ -180,7 +201,7 @@ where
     pub async fn update_app(&self, application: &Application) -> ClientResult<bool> {
         let req = self
             .client
-            .put(self.url(&application.metadata.name, None)?)
+            .put(self.url(Some(&application.metadata.name), None)?)
             .json(&application)
             .propagate_current_context()
             .inject_token(&self.token_provider)
@@ -196,7 +217,10 @@ where
     pub async fn update_device(&self, device: &Device) -> ClientResult<bool> {
         let req = self
             .client
-            .put(self.url(&device.metadata.application, Some(&device.metadata.name))?)
+            .put(self.url(
+                Some(&device.metadata.application),
+                Some(&device.metadata.name),
+            )?)
             .json(&device)
             .propagate_current_context()
             .inject_token(&self.token_provider)
@@ -228,7 +252,7 @@ where
     pub async fn create_app(&self, app: &Application) -> ClientResult<()> {
         let req = self
             .client
-            .post(self.url("", None)?)
+            .post(self.url(None, None)?)
             .json(&app)
             .inject_token(&self.token_provider)
             .await?;
@@ -243,7 +267,7 @@ where
     {
         let req = self
             .client
-            .delete(self.url(application.as_ref(), None)?)
+            .delete(self.url(Some(application.as_ref()), None)?)
             .inject_token(&self.token_provider)
             .await?;
 
@@ -255,7 +279,7 @@ where
     pub async fn create_device(&self, device: &Device) -> ClientResult<()> {
         let req = self
             .client
-            .post(self.url(&device.metadata.application, Some(""))?)
+            .post(self.url(Some(&device.metadata.application), Some(""))?)
             .json(&device)
             .inject_token(&self.token_provider)
             .await?;
@@ -271,7 +295,7 @@ where
     {
         let req = self
             .client
-            .delete(self.url(application.as_ref(), Some(device.as_ref()))?)
+            .delete(self.url(Some(application.as_ref()), Some(device.as_ref()))?)
             .inject_token(&self.token_provider)
             .await?;
 
@@ -300,6 +324,23 @@ mod test {
     use crate::openid::NoTokenProvider;
 
     #[test]
+    fn test_url_list() -> anyhow::Result<()> {
+        let client = Client::new(
+            Default::default(),
+            Url::parse("http://localhost")?,
+            NoTokenProvider,
+        );
+
+        let url = client.url(None, None).unwrap();
+        assert_eq!(
+            url.to_string(),
+            "http://localhost/api/registry/v1alpha1/apps",
+        );
+
+        Ok(())
+    }
+
+    #[test]
     fn test_url_app() -> anyhow::Result<()> {
         let client = Client::new(
             Default::default(),
@@ -307,7 +348,7 @@ mod test {
             NoTokenProvider,
         );
 
-        let url = client.url("foo", Some("bar/baz")).unwrap();
+        let url = client.url(Some("foo"), Some("bar/baz")).unwrap();
         assert_eq!(
             url.to_string(),
             "http://localhost/api/registry/v1alpha1/apps/foo/devices/bar%2Fbaz"
