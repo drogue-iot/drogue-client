@@ -48,12 +48,12 @@ where
                 if !application.is_empty() {
                     path.push(application);
                 }
-            }
 
-            if let Some(device) = device {
-                path.push("devices");
-                if !device.is_empty() {
-                    path.push(device);
+                if let Some(device) = device {
+                    path.push("devices");
+                    if !device.is_empty() {
+                        path.push(device);
+                    }
                 }
             }
         }
