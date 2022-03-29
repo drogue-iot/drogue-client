@@ -30,6 +30,7 @@ where
     /// The correct authentication and tracing headers will be added to the request.
     async fn read<T>(&self, url: Url) -> Result<Option<T>, ClientError<reqwest::Error>>
     where
+        Self: std::marker::Send,
         T: DeserializeOwned,
     {
         let req = self
@@ -39,8 +40,12 @@ where
             .inject_token(self.token_provider())
             .await?;
 
-        let response = req.send().await?;
+        Self::read_response(req.send().await?).await
+    }
 
+    async fn read_response<T: DeserializeOwned>(
+        response: Response,
+    ) -> Result<Option<T>, ClientError<reqwest::Error>> {
         log::debug!("Eval get response: {:#?}", response);
         match response.status() {
             StatusCode::OK => Ok(Some(response.json().await?)),
@@ -57,6 +62,7 @@ where
     /// The correct authentication and tracing headers will be added to the request.
     async fn update<A>(&self, url: Url, payload: A) -> Result<bool, ClientError<reqwest::Error>>
     where
+        Self: std::marker::Send,
         A: Serialize + Send + Sync,
     {
         let req = self
@@ -67,8 +73,10 @@ where
             .inject_token(self.token_provider())
             .await?;
 
-        let response = req.send().await?;
+        Self::update_response(req.send().await?).await
+    }
 
+    async fn update_response(response: Response) -> Result<bool, ClientError<reqwest::Error>> {
         log::debug!("Eval update response: {:#?}", response);
         match response.status() {
             StatusCode::OK | StatusCode::NO_CONTENT => Ok(true),
@@ -82,15 +90,20 @@ where
     /// The resource must exist, otherwise `false` is returned.
     ///
     /// The correct authentication and tracing headers will be added to the request.
-    async fn delete(&self, url: Url) -> Result<bool, ClientError<reqwest::Error>> {
+    async fn delete(&self, url: Url) -> Result<bool, ClientError<reqwest::Error>>
+    where
+        Self: std::marker::Send,
+    {
         let req = self
             .client()
             .delete(url)
             .inject_token(self.token_provider())
             .await?;
 
-        let response = req.send().await?;
+        Self::delete_response(req.send().await?).await
+    }
 
+    async fn delete_response(response: Response) -> Result<bool, ClientError<reqwest::Error>> {
         log::debug!("Eval delete response: {:#?}", response);
         match response.status() {
             StatusCode::OK | StatusCode::NO_CONTENT => Ok(true),
@@ -108,6 +121,7 @@ where
         payload: Option<A>,
     ) -> Result<Option<T>, ClientError<reqwest::Error>>
     where
+        Self: std::marker::Send,
         A: Serialize + Send + Sync,
         T: DeserializeOwned,
     {
@@ -119,8 +133,12 @@ where
         .inject_token(self.token_provider())
         .await?;
 
-        let response = req.send().await?;
+        Self::create_response(req.send().await?).await
+    }
 
+    async fn create_response<T: DeserializeOwned>(
+        response: Response,
+    ) -> Result<Option<T>, ClientError<reqwest::Error>> {
         log::debug!("Eval create response: {:#?}", response);
         match response.status() {
             StatusCode::CREATED => Ok(None),

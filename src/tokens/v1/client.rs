@@ -77,7 +77,14 @@ where
     ///
     /// The result will contain the full token. This value is only available once.
     #[instrument]
-    pub async fn create_token(&self) -> ClientResult<Option<CreatedAccessToken>> {
+    pub async fn create_token<D>(
+        &self,
+        description: Option<D>,
+    ) -> ClientResult<Option<CreatedAccessToken>>
+    where
+        D: AsRef<str> + Debug,
+    {
+        // here we need to override the trait method as we need to add a query parameter with the description.
         self.create(self.url(Some(""))?, None::<()>).await
     }
 
