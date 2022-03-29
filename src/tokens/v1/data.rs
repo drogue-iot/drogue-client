@@ -1,20 +1,14 @@
-use chrono::{DateTime, TimeZone, Utc};
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-
-fn epoch() -> DateTime<Utc> {
-    Utc.timestamp_millis(0)
-}
 
 #[derive(Clone, Debug, Deserialize, Serialize, Eq, PartialEq)]
 pub struct AccessToken {
     /// The creation date of the access token
-    #[serde(default = "epoch")]
     pub created: DateTime<Utc>,
     /// The access token prefix
-    #[serde(default)]
     pub prefix: String,
     /// The access token description
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
 }
 

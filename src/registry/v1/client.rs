@@ -179,7 +179,7 @@ where
     pub async fn update_app(&self, application: &Application) -> ClientResult<bool> {
         self.update(
             self.url(Some(application.metadata.name.as_str()), None)?,
-            application,
+            Some(application),
         )
         .await
     }
@@ -194,7 +194,7 @@ where
                 Some(device.metadata.application.as_str()),
                 Some(device.metadata.name.as_str()),
             )?,
-            device,
+            Some(device),
         )
         .await
     }
