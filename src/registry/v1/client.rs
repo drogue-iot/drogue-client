@@ -218,7 +218,7 @@ where
     #[instrument]
     pub async fn create_device(&self, device: &Device) -> ClientResult<Option<()>> {
         self.create(
-            self.url(Some(&device.metadata.application.as_str()), Some(""))?,
+            self.url(Some(device.metadata.application.as_str()), Some(""))?,
             Some(device),
         )
         .await
