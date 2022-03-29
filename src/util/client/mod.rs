@@ -123,7 +123,9 @@ where
 
         log::debug!("Eval create response: {:#?}", response);
         match response.status() {
-            StatusCode::CREATED => Ok(Some(response.json().await?)),
+            StatusCode::CREATED => Ok(None),
+            // the token API responds 200 on token creations, sending back the content.
+            StatusCode::OK => Ok(Some(response.json().await?)),
             _ => Self::default_response(response).await,
         }
     }
