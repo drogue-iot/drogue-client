@@ -1,13 +1,14 @@
 use super::data::*;
+use crate::error::ClientError;
 use crate::openid::TokenProvider;
-use crate::{error::ClientError, openid::TokenInjector, Context};
-use reqwest::{Response, StatusCode};
-use serde::de::DeserializeOwned;
+use crate::util::Client;
+use std::fmt::Debug;
+use tracing::instrument;
 use url::Url;
 
 /// A device registry client, backed by reqwest.
 #[derive(Clone, Debug)]
-pub struct Client<TP>
+pub struct TokenClient<TP>
 where
     TP: TokenProvider,
 {
@@ -18,12 +19,12 @@ where
 
 type ClientResult<T> = Result<T, ClientError<reqwest::Error>>;
 
-impl<TP> Client<TP>
+impl<TP> Client<TP> for TokenClient<TP>
 where
     TP: TokenProvider,
 {
     /// Create a new client instance.
-    pub fn new(client: reqwest::Client, api_url: Url, token_provider: TP) -> Self {
+    fn new(client: reqwest::Client, api_url: Url, token_provider: TP) -> Self {
         Self {
             client,
             api_url,
@@ -31,7 +32,20 @@ where
         }
     }
 
-    fn url(&self, prefix: &str) -> ClientResult<Url> {
+    fn client(&self) -> &reqwest::Client {
+        &self.client
+    }
+
+    fn token_provider(&self) -> &TP {
+        &self.token_provider
+    }
+}
+
+impl<TP> TokenClient<TP>
+where
+    TP: TokenProvider,
+{
+    fn url(&self, prefix: Option<&str>) -> ClientResult<Url> {
         let mut url = self.api_url.clone();
 
         {
@@ -40,8 +54,10 @@ where
                 .map_err(|_| ClientError::Request("Failed to get paths".into()))?;
 
             path.extend(&["api", "tokens", "v1alpha1"]);
-            if !prefix.is_empty() {
-                path.push(prefix);
+            if let Some(prefix) = prefix {
+                if !prefix.is_empty() {
+                    path.push(prefix);
+                }
             }
         }
 
@@ -52,75 +68,25 @@ where
     ///
     /// The full token won't be disclosed, as it is secret and unknown by the server.
     /// The result contains the prefix and creation date for each active token.
-    pub async fn get_tokens(&self, context: Context) -> ClientResult<Vec<AccessToken>> {
-        let req = self
-            .client
-            .get(self.url("")?)
-            .inject_token(&self.token_provider, context)
-            .await?;
-
-        Self::get_response(req.send().await?).await
-    }
-
-    async fn get_response<T: DeserializeOwned>(response: Response) -> ClientResult<Vec<T>> {
-        log::debug!("Eval get response: {:#?}", response);
-        match response.status() {
-            StatusCode::OK => Ok(response.json().await?),
-            StatusCode::NOT_FOUND => Ok(Vec::new()),
-            _ => Self::default_response(response).await,
-        }
+    #[instrument]
+    pub async fn get_tokens(&self) -> ClientResult<Option<Vec<AccessToken>>> {
+        self.read(self.url(Some(""))?).await
     }
 
     /// Create a new access token for this user.
     ///
     /// The result will contain the full token. This value is only available once.
-    pub async fn create_token(&self, context: Context) -> ClientResult<CreatedAccessToken> {
-        let req = self
-            .client
-            .post(self.url("")?)
-            .inject_token(&self.token_provider, context)
-            .await?;
-
-        Self::create_response(req.send().await?).await
+    #[instrument]
+    pub async fn create_token(&self) -> ClientResult<Option<CreatedAccessToken>> {
+        self.create(self.url(Some(""))?, None::<()>).await
     }
 
-    async fn create_response<T: DeserializeOwned>(response: Response) -> ClientResult<T> {
-        log::debug!("Eval create response: {:#?}", response);
-        match response.status() {
-            StatusCode::OK => Ok(response.json().await?),
-            _ => Self::default_response(response).await,
-        }
-    }
-
-    // TODO : refactor - it already exists in registry::client
-    pub async fn delete_token<A>(&self, prefix: A, context: Context) -> ClientResult<bool>
+    /// Delete an existing token for this user.
+    #[instrument]
+    pub async fn delete_token<P>(&self, prefix: P) -> ClientResult<bool>
     where
-        A: AsRef<str>,
+        P: AsRef<str> + Debug,
     {
-        let req = self
-            .client
-            .delete(self.url(prefix.as_ref())?)
-            .inject_token(&self.token_provider, context)
-            .await?;
-
-        Self::delete_response(req.send().await?).await
-    }
-
-    // TODO : refactor - it already exists in registry::client
-    async fn delete_response(response: Response) -> ClientResult<bool> {
-        log::debug!("Eval delete response: {:#?}", response);
-        match response.status() {
-            StatusCode::OK | StatusCode::NO_CONTENT => Ok(true),
-            StatusCode::NOT_FOUND => Ok(false),
-            _ => Self::default_response(response).await,
-        }
-    }
-
-    // TODO : refactor - it already exists in registry::client
-    async fn default_response<T>(response: Response) -> ClientResult<T> {
-        match response.status() {
-            code if code.is_client_error() => Err(ClientError::Service(response.json().await?)),
-            code => Err(ClientError::Request(format!("Unexpected code {:?}", code))),
-        }
+        self.delete(self.url(Some(prefix.as_ref()))?).await
     }
 }

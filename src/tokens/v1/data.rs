@@ -13,6 +13,9 @@ pub struct AccessToken {
     /// The access token prefix
     #[serde(default)]
     pub prefix: String,
+    /// The access token description
+    #[serde(default)]
+    pub description: Option<String>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, Eq, PartialEq)]
