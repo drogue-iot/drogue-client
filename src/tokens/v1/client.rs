@@ -1,14 +1,14 @@
 use super::data::*;
 use crate::error::ClientError;
 use crate::openid::{TokenInjector, TokenProvider};
-use crate::util::Client;
+use crate::util::Client as ClientTrait;
 use std::fmt::Debug;
 use tracing::instrument;
 use url::Url;
 
-/// A device registry client, backed by reqwest.
+/// A client for the token management API, backed by reqwest.
 #[derive(Clone, Debug)]
-pub struct TokenClient<TP>
+pub struct Client<TP>
 where
     TP: TokenProvider,
 {
@@ -19,7 +19,7 @@ where
 
 type ClientResult<T> = Result<T, ClientError<reqwest::Error>>;
 
-impl<TP> Client<TP> for TokenClient<TP>
+impl<TP> ClientTrait<TP> for Client<TP>
 where
     TP: TokenProvider,
 {
@@ -41,7 +41,7 @@ where
     }
 }
 
-impl<TP> TokenClient<TP>
+impl<TP> Client<TP>
 where
     TP: TokenProvider,
 {
