@@ -1,4 +1,5 @@
 use super::data::*;
+use crate::core::WithTracing;
 use crate::openid::{TokenInjector, TokenProvider};
 use crate::util::Client as ClientTrait;
 use crate::{error::ClientError, Translator};
@@ -6,7 +7,6 @@ use futures::{stream, StreamExt, TryStreamExt};
 use std::fmt::Debug;
 use tracing::instrument;
 use url::Url;
-use crate::core::WithTracing;
 
 /// A device registry client
 #[derive(Clone, Debug)]
@@ -84,14 +84,12 @@ where
     /// If the user does not have access to the API, the server side may return "not found"
     /// as a response instead of "forbidden".
     #[instrument]
-    pub async fn list_apps<L>(&self, labels: Option<L> ) -> ClientResult<Option<Vec<Application>>>
+    pub async fn list_apps<L>(&self, labels: Option<L>) -> ClientResult<Option<Vec<Application>>>
     where
         L: IntoIterator + Debug,
         L::Item: AsRef<str>,
     {
-        let mut req = self
-            .client()
-            .get(self.url(None, None)?);
+        let mut req = self.client().get(self.url(None, None)?);
 
         // todo it would be cool to have a programmatic way to construct labels selectors
         // using drogue-cloud-service-api::labels::LabelSelector

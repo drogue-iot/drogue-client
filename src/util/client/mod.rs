@@ -25,6 +25,7 @@ where
     /// Execute a GET request to read a resouce content or to list resources
     ///
     /// The correct authentication and tracing headers will be added to the request.
+    #[doc(hidden)]
     async fn read<T>(&self, url: Url) -> Result<Option<T>, ClientError<reqwest::Error>>
     where
         Self: std::marker::Send,
@@ -57,6 +58,7 @@ where
     /// The resource must exist, otherwise `false` is returned.
     ///
     /// The correct authentication and tracing headers will be added to the request.
+    #[doc(hidden)]
     async fn update<A>(
         &self,
         url: Url,
@@ -92,6 +94,7 @@ where
     /// The resource must exist, otherwise `false` is returned.
     ///
     /// The correct authentication and tracing headers will be added to the request.
+    #[doc(hidden)]
     async fn delete(&self, url: Url) -> Result<bool, ClientError<reqwest::Error>>
     where
         Self: std::marker::Send,
@@ -117,6 +120,7 @@ where
     /// Execute a POST request to create a resource.
     ///
     /// The correct authentication and tracing headers will be added to the request.
+    #[doc(hidden)]
     async fn create<P, T>(
         &self,
         url: Url,
