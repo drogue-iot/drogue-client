@@ -1,6 +1,6 @@
 use super::data::*;
 use crate::openid::TokenProvider;
-use crate::util::Client;
+use crate::util::Client as ClientTrait;
 use crate::{error::ClientError, Translator};
 use futures::{stream, StreamExt, TryStreamExt};
 use std::fmt::Debug;
@@ -9,7 +9,7 @@ use url::Url;
 
 /// A device registry client
 #[derive(Clone, Debug)]
-pub struct RegistryClient<TP>
+pub struct Client<TP>
 where
     TP: TokenProvider,
 {
@@ -20,7 +20,7 @@ where
 
 type ClientResult<T> = Result<T, ClientError<reqwest::Error>>;
 
-impl<TP> Client<TP> for RegistryClient<TP>
+impl<TP> ClientTrait<TP> for Client<TP>
 where
     TP: TokenProvider,
 {
@@ -42,7 +42,7 @@ where
     }
 }
 
-impl<TP> RegistryClient<TP>
+impl<TP> Client<TP>
 where
     TP: TokenProvider,
 {
@@ -242,7 +242,7 @@ mod test {
 
     #[test]
     fn test_url_list() -> anyhow::Result<()> {
-        let client = RegistryClient::new(
+        let client = Client::new(
             Default::default(),
             Url::parse("http://localhost")?,
             NoTokenProvider,
@@ -259,7 +259,7 @@ mod test {
 
     #[test]
     fn test_url_app() -> anyhow::Result<()> {
-        let client = RegistryClient::new(
+        let client = Client::new(
             Default::default(),
             Url::parse("http://localhost")?,
             NoTokenProvider,
