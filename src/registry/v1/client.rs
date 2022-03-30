@@ -1,11 +1,12 @@
 use super::data::*;
-use crate::openid::TokenProvider;
+use crate::openid::{TokenInjector, TokenProvider};
 use crate::util::Client as ClientTrait;
 use crate::{error::ClientError, Translator};
 use futures::{stream, StreamExt, TryStreamExt};
 use std::fmt::Debug;
 use tracing::instrument;
 use url::Url;
+use crate::core::WithTracing;
 
 /// A device registry client
 #[derive(Clone, Debug)]
@@ -75,14 +76,43 @@ where
 
     /// List applications.
     ///
+    /// Optionally pass a list of labels selectors to filter the list.
+    ///
     /// If no applications exists, this function will return an empty Vec, otherwise it will return
     /// a list of applications.
     ///
     /// If the user does not have access to the API, the server side may return "not found"
     /// as a response instead of "forbidden".
     #[instrument]
-    pub async fn list_apps(&self) -> ClientResult<Option<Vec<Application>>> {
-        self.read(self.url(None, None)?).await
+    pub async fn list_apps<L>(&self, labels: Option<L> ) -> ClientResult<Option<Vec<Application>>>
+    where
+        L: IntoIterator + Debug,
+        L::Item: AsRef<str>,
+    {
+        let mut req = self
+            .client()
+            .get(self.url(None, None)?);
+
+        // todo it would be cool to have a programmatic way to construct labels selectors
+        // using drogue-cloud-service-api::labels::LabelSelector
+        // Also, allocating strings from the `&str` we have is terrible,
+        // but using only `as_ref()` from the iter was dropping the reference after the loop.
+        if let Some(labels) = labels {
+            let label_string = labels
+                .into_iter()
+                .map(|item| item.as_ref().to_string())
+                .collect::<Vec<String>>()
+                .join(",");
+
+            req = req.query(&[("labels", label_string)]);
+        }
+
+        let req = req
+            .propagate_current_context()
+            .inject_token(self.token_provider())
+            .await?;
+
+        Self::read_response(req.send().await?).await
     }
 
     /// Get an application by name.
