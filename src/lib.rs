@@ -10,6 +10,6 @@ pub mod tokens;
 
 mod serde;
 mod translator;
-pub mod util;
+mod util;
 
 pub use translator::*;

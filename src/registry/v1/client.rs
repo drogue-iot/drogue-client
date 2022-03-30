@@ -24,15 +24,6 @@ impl<TP> ClientTrait<TP> for Client<TP>
 where
     TP: TokenProvider,
 {
-    /// Create a new client instance.
-    fn new(client: reqwest::Client, registry_url: Url, token_provider: TP) -> Self {
-        Self {
-            client,
-            registry_url,
-            token_provider,
-        }
-    }
-
     fn client(&self) -> &reqwest::Client {
         &self.client
     }
@@ -46,6 +37,15 @@ impl<TP> Client<TP>
 where
     TP: TokenProvider,
 {
+    /// Create a new client instance.
+    pub fn new(client: reqwest::Client, registry_url: Url, token_provider: TP) -> Self {
+        Self {
+            client,
+            registry_url,
+            token_provider,
+        }
+    }
+
     /// craft url for the registry
     fn url(&self, application: Option<&str>, device: Option<&str>) -> ClientResult<Url> {
         let mut url = self.registry_url.clone();

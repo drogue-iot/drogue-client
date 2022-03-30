@@ -16,9 +16,6 @@ pub trait Client<TP>
 where
     TP: TokenProvider,
 {
-    /// Constructor
-    fn new(client: reqwest::Client, url: Url, token_provider: TP) -> Self;
-
     /// Retrieve the http client
     fn client(&self) -> &reqwest::Client;
 

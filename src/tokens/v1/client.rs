@@ -23,15 +23,6 @@ impl<TP> ClientTrait<TP> for Client<TP>
 where
     TP: TokenProvider,
 {
-    /// Create a new client instance.
-    fn new(client: reqwest::Client, api_url: Url, token_provider: TP) -> Self {
-        Self {
-            client,
-            api_url,
-            token_provider,
-        }
-    }
-
     fn client(&self) -> &reqwest::Client {
         &self.client
     }
@@ -45,6 +36,15 @@ impl<TP> Client<TP>
 where
     TP: TokenProvider,
 {
+    /// Create a new client instance.
+    pub fn new(client: reqwest::Client, api_url: Url, token_provider: TP) -> Self {
+        Self {
+            client,
+            api_url,
+            token_provider,
+        }
+    }
+
     fn url(&self, prefix: Option<&str>) -> ClientResult<Url> {
         let mut url = self.api_url.clone();
 
