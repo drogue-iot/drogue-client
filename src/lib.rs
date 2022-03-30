@@ -1,5 +1,6 @@
 //! A client for the Drogue IoT Cloud APIs.
 
+pub mod admin;
 pub mod core;
 pub mod error;
 pub mod meta;

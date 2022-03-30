@@ -53,22 +53,27 @@ where
 
     /// Execute a PUT request to update an existing resource.
     ///
-    /// A payload with the updated resource must be passed.
+    /// A payload with the updated resource can be passed.
     /// The resource must exist, otherwise `false` is returned.
     ///
     /// The correct authentication and tracing headers will be added to the request.
-    async fn update<A>(&self, url: Url, payload: A) -> Result<bool, ClientError<reqwest::Error>>
+    async fn update<A>(
+        &self,
+        url: Url,
+        payload: Option<A>,
+    ) -> Result<bool, ClientError<reqwest::Error>>
     where
         Self: std::marker::Send,
         A: Serialize + Send + Sync,
     {
-        let req = self
-            .client()
-            .put(url)
-            .json(&payload)
-            .propagate_current_context()
-            .inject_token(self.token_provider())
-            .await?;
+        let req = if let Some(p) = payload {
+            self.client().post(url).json(&p)
+        } else {
+            self.client().post(url)
+        }
+        .propagate_current_context()
+        .inject_token(self.token_provider())
+        .await?;
 
         Self::update_response(req.send().await?).await
     }
@@ -76,7 +81,7 @@ where
     async fn update_response(response: Response) -> Result<bool, ClientError<reqwest::Error>> {
         log::debug!("Eval update response: {:#?}", response);
         match response.status() {
-            StatusCode::OK | StatusCode::NO_CONTENT => Ok(true),
+            StatusCode::OK | StatusCode::NO_CONTENT | StatusCode::ACCEPTED => Ok(true),
             StatusCode::NOT_FOUND => Ok(false),
             _ => Self::default_response(response).await,
         }
@@ -112,14 +117,14 @@ where
     /// Execute a POST request to create a resource.
     ///
     /// The correct authentication and tracing headers will be added to the request.
-    async fn create<A, T>(
+    async fn create<P, T>(
         &self,
         url: Url,
-        payload: Option<A>,
+        payload: Option<P>,
     ) -> Result<Option<T>, ClientError<reqwest::Error>>
     where
         Self: std::marker::Send,
-        A: Serialize + Send + Sync,
+        P: Serialize + Send + Sync,
         T: DeserializeOwned,
     {
         let req = if let Some(p) = payload {
@@ -127,6 +132,7 @@ where
         } else {
             self.client().post(url)
         }
+        .propagate_current_context()
         .inject_token(self.token_provider())
         .await?;
 
