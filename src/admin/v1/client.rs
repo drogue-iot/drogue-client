@@ -6,7 +6,7 @@ use std::fmt::Debug;
 use tracing::instrument;
 use url::Url;
 
-/// A device registry client, backed by reqwest.
+/// A client for drogue cloud application administration API, backed by reqwest.
 #[derive(Clone, Debug)]
 pub struct AdminClient<TP>
 where
@@ -29,15 +29,6 @@ impl<TP> Client<TP> for AdminClient<TP>
 where
     TP: TokenProvider,
 {
-    /// Create a new client instance.
-    fn new(client: reqwest::Client, api_url: Url, token_provider: TP) -> Self {
-        Self {
-            client,
-            api_url,
-            token_provider,
-        }
-    }
-
     fn client(&self) -> &reqwest::Client {
         &self.client
     }
@@ -51,6 +42,15 @@ impl<TP> AdminClient<TP>
 where
     TP: TokenProvider,
 {
+    /// Create a new client instance.
+    pub fn new(client: reqwest::Client, api_url: Url, token_provider: TP) -> Self {
+        Self {
+            client,
+            api_url,
+            token_provider,
+        }
+    }
+
     fn url(&self, application: &str, operation: AdministrationOperation) -> ClientResult<Url> {
         let mut url = self.api_url.clone();
 
