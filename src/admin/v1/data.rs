@@ -1,6 +1,7 @@
 use core::fmt::{Display, Formatter};
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
+use std::str::FromStr;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -40,6 +41,19 @@ impl Display for Role {
             Self::Admin => write!(f, "Administrator"),
             Self::Manager => write!(f, "Manager"),
             Self::Reader => write!(f, "Reader"),
+        }
+    }
+}
+
+impl FromStr for Role {
+    type Err = ();
+
+    fn from_str(input: &str) -> Result<Role, Self::Err> {
+        match input {
+            "Admin" | "admin" => Ok(Role::Admin),
+            "Manager" | "manager" => Ok(Role::Manager),
+            "Reader" | "reader" => Ok(Role::Reader),
+            _ => Err(()),
         }
     }
 }

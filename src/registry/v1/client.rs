@@ -210,13 +210,19 @@ where
     /// If the user does not have access to the API, the server side may return "not found"
     /// as a response instead of "forbidden".
     #[instrument]
-    pub async fn list_devices<A, L>(&self, application: A, labels: Option<L>) -> ClientResult<Option<Vec<Device>>>
-        where
-            A: AsRef<str> + Debug,
-            L: IntoIterator + Debug,
-            L::Item: AsRef<str>,
+    pub async fn list_devices<A, L>(
+        &self,
+        application: A,
+        labels: Option<L>,
+    ) -> ClientResult<Option<Vec<Device>>>
+    where
+        A: AsRef<str> + Debug,
+        L: IntoIterator + Debug,
+        L::Item: AsRef<str>,
     {
-        let mut req = self.client().get(self.url(Some(application.as_ref()), Some(""))?);
+        let mut req = self
+            .client()
+            .get(self.url(Some(application.as_ref()), Some(""))?);
 
         // todo refactor this duplicated code
         if let Some(labels) = labels {

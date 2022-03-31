@@ -1,14 +1,14 @@
 use super::data::*;
 use crate::error::ClientError;
 use crate::openid::TokenProvider;
-use crate::util::Client;
+use crate::util::Client as TraitClient;
 use std::fmt::Debug;
 use tracing::instrument;
 use url::Url;
 
 /// A client for drogue cloud application administration API, backed by reqwest.
 #[derive(Clone, Debug)]
-pub struct AdminClient<TP>
+pub struct Client<TP>
 where
     TP: TokenProvider,
 {
@@ -25,7 +25,7 @@ enum AdministrationOperation {
 
 type ClientResult<T> = Result<T, ClientError<reqwest::Error>>;
 
-impl<TP> Client<TP> for AdminClient<TP>
+impl<TP> TraitClient<TP> for Client<TP>
 where
     TP: TokenProvider,
 {
@@ -38,7 +38,7 @@ where
     }
 }
 
-impl<TP> AdminClient<TP>
+impl<TP> Client<TP>
 where
     TP: TokenProvider,
 {
