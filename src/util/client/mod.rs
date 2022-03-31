@@ -69,9 +69,9 @@ where
         A: Serialize + Send + Sync,
     {
         let req = if let Some(p) = payload {
-            self.client().post(url).json(&p)
+            self.client().put(url).json(&p)
         } else {
-            self.client().post(url)
+            self.client().put(url)
         }
         .propagate_current_context()
         .inject_token(self.token_provider())
