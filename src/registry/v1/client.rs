@@ -200,6 +200,43 @@ where
         }
     }
 
+    /// List devices.
+    ///
+    /// Optionally pass a list of labels selectors to filter the list.
+    ///
+    /// If no devices exists, this function will return an empty Vec, otherwise it will return
+    /// a list of devices.
+    ///
+    /// If the user does not have access to the API, the server side may return "not found"
+    /// as a response instead of "forbidden".
+    #[instrument]
+    pub async fn list_devices<A, L>(&self, application: A, labels: Option<L>) -> ClientResult<Option<Vec<Device>>>
+        where
+            A: AsRef<str> + Debug,
+            L: IntoIterator + Debug,
+            L::Item: AsRef<str>,
+    {
+        let mut req = self.client().get(self.url(Some(application.as_ref()), Some(""))?);
+
+        // todo refactor this duplicated code
+        if let Some(labels) = labels {
+            let label_string = labels
+                .into_iter()
+                .map(|item| item.as_ref().to_string())
+                .collect::<Vec<String>>()
+                .join(",");
+
+            req = req.query(&[("labels", label_string)]);
+        }
+
+        let req = req
+            .propagate_current_context()
+            .inject_token(self.token_provider())
+            .await?;
+
+        Self::read_response(req.send().await?).await
+    }
+
     /// Update (overwrite) an application.
     ///
     /// The application must exist, otherwise `false` is returned.
@@ -214,7 +251,7 @@ where
 
     /// Update (overwrite) a device.
     ///
-    /// The application must exist, otherwise `false` is returned.
+    /// The application and device must exist, otherwise `false` is returned.
     #[instrument]
     pub async fn update_device(&self, device: &Device) -> ClientResult<bool> {
         self.update(
