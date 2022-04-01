@@ -1,15 +1,14 @@
 use super::data::*;
 use crate::core::WithTracing;
-use crate::openid::TokenProvider;
-use crate::{error::ClientError, openid::TokenInjector, Translator};
+use crate::openid::{TokenInjector, TokenProvider};
+use crate::util::Client as ClientTrait;
+use crate::{error::ClientError, Translator};
 use futures::{stream, StreamExt, TryStreamExt};
-use reqwest::{Response, StatusCode};
-use serde::de::DeserializeOwned;
 use std::fmt::Debug;
 use tracing::instrument;
 use url::Url;
 
-/// A device registry client, backed by reqwest.
+/// A device registry client
 #[derive(Clone, Debug)]
 pub struct Client<TP>
 where
@@ -21,6 +20,19 @@ where
 }
 
 type ClientResult<T> = Result<T, ClientError<reqwest::Error>>;
+
+impl<TP> ClientTrait<TP> for Client<TP>
+where
+    TP: TokenProvider,
+{
+    fn client(&self) -> &reqwest::Client {
+        &self.client
+    }
+
+    fn token_provider(&self) -> &TP {
+        &self.token_provider
+    }
+}
 
 impl<TP> Client<TP>
 where
@@ -35,6 +47,7 @@ where
         }
     }
 
+    /// craft url for the registry
     fn url(&self, application: Option<&str>, device: Option<&str>) -> ClientResult<Url> {
         let mut url = self.registry_url.clone();
 
@@ -63,21 +76,41 @@ where
 
     /// List applications.
     ///
+    /// Optionally pass a list of labels selectors to filter the list.
+    ///
     /// If no applications exists, this function will return an empty Vec, otherwise it will return
     /// a list of applications.
     ///
     /// If the user does not have access to the API, the server side may return "not found"
     /// as a response instead of "forbidden".
     #[instrument]
-    pub async fn list_apps(&self) -> ClientResult<Option<Vec<Application>>> {
-        let req = self
-            .client
-            .get(self.url(None, None)?)
+    pub async fn list_apps<L>(&self, labels: Option<L>) -> ClientResult<Option<Vec<Application>>>
+    where
+        L: IntoIterator + Debug,
+        L::Item: AsRef<str>,
+    {
+        let mut req = self.client().get(self.url(None, None)?);
+
+        // todo it would be cool to have a programmatic way to construct labels selectors
+        // using drogue-cloud-service-api::labels::LabelSelector
+        // Also, allocating strings from the `&str` we have is terrible,
+        // but using only `as_ref()` from the iter was dropping the reference after the loop.
+        if let Some(labels) = labels {
+            let label_string = labels
+                .into_iter()
+                .map(|item| item.as_ref().to_string())
+                .collect::<Vec<String>>()
+                .join(",");
+
+            req = req.query(&[("labels", label_string)]);
+        }
+
+        let req = req
             .propagate_current_context()
-            .inject_token(&self.token_provider)
+            .inject_token(self.token_provider())
             .await?;
 
-        Self::get_response(req.send().await?).await
+        Self::read_response(req.send().await?).await
     }
 
     /// Get an application by name.
@@ -92,14 +125,7 @@ where
     where
         A: AsRef<str> + Debug,
     {
-        let req = self
-            .client
-            .get(self.url(Some(application.as_ref()), None)?)
-            .propagate_current_context()
-            .inject_token(&self.token_provider)
-            .await?;
-
-        Self::get_response(req.send().await?).await
+        self.read(self.url(Some(application.as_ref()), None)?).await
     }
 
     /// Get a device by name.
@@ -115,14 +141,8 @@ where
         A: AsRef<str> + Debug,
         D: AsRef<str> + Debug,
     {
-        let req = self
-            .client
-            .get(self.url(Some(application.as_ref()), Some(device.as_ref()))?)
-            .propagate_current_context()
-            .inject_token(&self.token_provider)
-            .await?;
-
-        Self::get_response(req.send().await?).await
+        self.read(self.url(Some(application.as_ref()), Some(device.as_ref()))?)
+            .await
     }
 
     /// Get a list of devices.
@@ -158,14 +178,9 @@ where
         A: AsRef<str> + Debug,
         D: AsRef<str> + Debug,
     {
-        let req = self
-            .client
-            .get(self.url(Some(application.as_ref()), Some(device.as_ref()))?)
-            .propagate_current_context()
-            .inject_token(&self.token_provider)
+        let device: Option<Device> = self
+            .read(self.url(Some(application.as_ref()), Some(device.as_ref()))?)
             .await?;
-
-        let device: Option<Device> = Self::get_response(req.send().await?).await?;
 
         if let Some(device) = device {
             let gateways = if let Some(gw_sel) = device
@@ -185,13 +200,47 @@ where
         }
     }
 
-    async fn get_response<T: DeserializeOwned>(response: Response) -> ClientResult<Option<T>> {
-        log::debug!("Eval get response: {:#?}", response);
-        match response.status() {
-            StatusCode::OK => Ok(Some(response.json().await?)),
-            StatusCode::NOT_FOUND => Ok(None),
-            _ => Self::default_response(response).await,
+    /// List devices.
+    ///
+    /// Optionally pass a list of labels selectors to filter the list.
+    ///
+    /// If no devices exists, this function will return an empty Vec, otherwise it will return
+    /// a list of devices.
+    ///
+    /// If the user does not have access to the API, the server side may return "not found"
+    /// as a response instead of "forbidden".
+    #[instrument]
+    pub async fn list_devices<A, L>(
+        &self,
+        application: A,
+        labels: Option<L>,
+    ) -> ClientResult<Option<Vec<Device>>>
+    where
+        A: AsRef<str> + Debug,
+        L: IntoIterator + Debug,
+        L::Item: AsRef<str>,
+    {
+        let mut req = self
+            .client()
+            .get(self.url(Some(application.as_ref()), Some(""))?);
+
+        // todo refactor this duplicated code
+        if let Some(labels) = labels {
+            let label_string = labels
+                .into_iter()
+                .map(|item| item.as_ref().to_string())
+                .collect::<Vec<String>>()
+                .join(",");
+
+            req = req.query(&[("labels", label_string)]);
         }
+
+        let req = req
+            .propagate_current_context()
+            .inject_token(self.token_provider())
+            .await?;
+
+        Self::read_response(req.send().await?).await
     }
 
     /// Update (overwrite) an application.
@@ -199,65 +248,32 @@ where
     /// The application must exist, otherwise `false` is returned.
     #[instrument]
     pub async fn update_app(&self, application: &Application) -> ClientResult<bool> {
-        let req = self
-            .client
-            .put(self.url(Some(&application.metadata.name), None)?)
-            .json(&application)
-            .propagate_current_context()
-            .inject_token(&self.token_provider)
-            .await?;
-
-        Self::update_response(req.send().await?).await
+        self.update(
+            self.url(Some(application.metadata.name.as_str()), None)?,
+            Some(application),
+        )
+        .await
     }
 
     /// Update (overwrite) a device.
     ///
-    /// The application must exist, otherwise `false` is returned.
+    /// The application and device must exist, otherwise `false` is returned.
     #[instrument]
     pub async fn update_device(&self, device: &Device) -> ClientResult<bool> {
-        let req = self
-            .client
-            .put(self.url(
-                Some(&device.metadata.application),
-                Some(&device.metadata.name),
-            )?)
-            .json(&device)
-            .propagate_current_context()
-            .inject_token(&self.token_provider)
-            .await?;
-
-        Self::update_response(req.send().await?).await
-    }
-
-    async fn update_response(response: Response) -> ClientResult<bool> {
-        log::debug!("Eval update response: {:#?}", response);
-        match response.status() {
-            StatusCode::OK | StatusCode::NO_CONTENT => Ok(true),
-            StatusCode::NOT_FOUND => Ok(false),
-            _ => Self::default_response(response).await,
-        }
-    }
-
-    async fn delete_response(response: Response) -> ClientResult<bool> {
-        log::debug!("Eval delete response: {:#?}", response);
-        match response.status() {
-            StatusCode::OK | StatusCode::NO_CONTENT => Ok(true),
-            StatusCode::NOT_FOUND => Ok(false),
-            _ => Self::default_response(response).await,
-        }
+        self.update(
+            self.url(
+                Some(device.metadata.application.as_str()),
+                Some(device.metadata.name.as_str()),
+            )?,
+            Some(device),
+        )
+        .await
     }
 
     /// Create a new application.
     #[instrument]
-    pub async fn create_app(&self, app: &Application) -> ClientResult<()> {
-        let req = self
-            .client
-            .post(self.url(None, None)?)
-            .json(&app)
-            .inject_token(&self.token_provider)
-            .await?;
-
-        Self::create_response(req.send().await?).await
+    pub async fn create_app(&self, app: &Application) -> ClientResult<Option<()>> {
+        self.create(self.url(None, None)?, Some(app)).await
     }
 
     #[instrument]
@@ -265,26 +281,18 @@ where
     where
         A: AsRef<str> + Debug,
     {
-        let req = self
-            .client
-            .delete(self.url(Some(application.as_ref()), None)?)
-            .inject_token(&self.token_provider)
-            .await?;
-
-        Self::delete_response(req.send().await?).await
+        self.delete(self.url(Some(application.as_ref()), None)?)
+            .await
     }
 
     /// Create a new device.
     #[instrument]
-    pub async fn create_device(&self, device: &Device) -> ClientResult<()> {
-        let req = self
-            .client
-            .post(self.url(Some(&device.metadata.application), Some(""))?)
-            .json(&device)
-            .inject_token(&self.token_provider)
-            .await?;
-
-        Self::create_response(req.send().await?).await
+    pub async fn create_device(&self, device: &Device) -> ClientResult<Option<()>> {
+        self.create(
+            self.url(Some(device.metadata.application.as_str()), Some(""))?,
+            Some(device),
+        )
+        .await
     }
 
     #[instrument]
@@ -293,28 +301,8 @@ where
         A: AsRef<str> + Debug,
         D: AsRef<str> + Debug,
     {
-        let req = self
-            .client
-            .delete(self.url(Some(application.as_ref()), Some(device.as_ref()))?)
-            .inject_token(&self.token_provider)
-            .await?;
-
-        Self::delete_response(req.send().await?).await
-    }
-
-    async fn create_response(response: Response) -> ClientResult<()> {
-        log::debug!("Eval create response: {:#?}", response);
-        match response.status() {
-            StatusCode::CREATED => Ok(()),
-            _ => Self::default_response(response).await,
-        }
-    }
-
-    async fn default_response<T>(response: Response) -> ClientResult<T> {
-        match response.status() {
-            code if code.is_client_error() => Err(ClientError::Service(response.json().await?)),
-            code => Err(ClientError::Request(format!("Unexpected code {:?}", code))),
-        }
+        self.delete(self.url(Some(application.as_ref()), Some(device.as_ref()))?)
+            .await
     }
 }
 
