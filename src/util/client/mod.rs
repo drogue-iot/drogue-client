@@ -31,9 +31,29 @@ where
         Self: std::marker::Send,
         T: DeserializeOwned,
     {
+        self.read_with_query_parameters(url, None).await
+    }
+
+    /// Execute a GET request to read a resouce content or to list resources
+    /// Optionally add query parameters.
+    ///
+    /// The correct authentication and tracing headers will be added to the request.
+    #[doc(hidden)]
+    async fn read_with_query_parameters<T>(
+        &self,
+        url: Url,
+        query: Option<Vec<(String, String)>>,
+    ) -> Result<Option<T>, ClientError<reqwest::Error>>
+    where
+        Self: std::marker::Send,
+        T: DeserializeOwned,
+    {
+        let query = query.unwrap_or_default();
+
         let req = self
             .client()
             .get(url)
+            .query(&query)
             .propagate_current_context()
             .inject_token(self.token_provider())
             .await?;
@@ -131,11 +151,33 @@ where
         P: Serialize + Send + Sync,
         T: DeserializeOwned,
     {
+        self.create_with_query_parameters(url, payload, None).await
+    }
+
+    /// Execute a POST request to create a resource.
+    /// Optionally add query parameters
+    ///
+    /// The correct authentication and tracing headers will be added to the request.
+    #[doc(hidden)]
+    async fn create_with_query_parameters<P, T>(
+        &self,
+        url: Url,
+        payload: Option<P>,
+        query: Option<Vec<(String, String)>>,
+    ) -> Result<Option<T>, ClientError<reqwest::Error>>
+    where
+        Self: std::marker::Send,
+        P: Serialize + Send + Sync,
+        T: DeserializeOwned,
+    {
+        let query = query.unwrap_or_default();
+
         let req = if let Some(p) = payload {
             self.client().post(url).json(&p)
         } else {
             self.client().post(url)
         }
+        .query(&query)
         .propagate_current_context()
         .inject_token(self.token_provider())
         .await?;
