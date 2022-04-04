@@ -1,6 +1,6 @@
 use crate::core::WithTracing;
 use crate::openid::TokenProvider;
-use crate::{error::ClientError, openid::TokenInjector};
+use crate::{error::ClientError, error::ErrorInformation, openid::TokenInjector};
 
 use async_trait::async_trait;
 use reqwest::{Response, StatusCode};
@@ -199,7 +199,23 @@ where
 
     async fn default_response<T>(response: Response) -> Result<T, ClientError<reqwest::Error>> {
         match response.status() {
-            code if code.is_client_error() => Err(ClientError::Service(response.json().await?)),
+            code if code.is_client_error() => {
+                let error = match response.json().await {
+                    Ok(json) => {
+                        ErrorInformation {
+                            error: json,
+                            message: format!("HTTP {}", code)
+                        }
+                    },
+                    Err(_) => {
+                        ErrorInformation {
+                            error: String::default(),
+                            message: format!("HTTP error {}", code)
+                        }
+                    }
+                };
+                Err(ClientError::Service(error))
+            },
             code => Err(ClientError::Request(format!("Unexpected code {:?}", code))),
         }
     }
