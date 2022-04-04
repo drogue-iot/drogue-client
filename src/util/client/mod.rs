@@ -190,7 +190,7 @@ where
     ) -> Result<Option<T>, ClientError<reqwest::Error>> {
         log::debug!("Eval create response: {:#?}", response);
         match response.status() {
-            StatusCode::CREATED => Ok(None),
+            StatusCode::CREATED | StatusCode::ACCEPTED => Ok(None),
             // the token API responds 200 on token creations, sending back the content.
             StatusCode::OK => Ok(Some(response.json().await?)),
             _ => Self::default_response(response).await,

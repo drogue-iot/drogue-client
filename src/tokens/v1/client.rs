@@ -86,8 +86,8 @@ where
     {
         let url = self.url(Some(""))?;
 
-        let param = description
-            .map(move |d| vec![("description".to_string(), d.as_ref().to_string().clone())]);
+        let param =
+            description.map(move |d| vec![("description".to_string(), d.as_ref().to_string())]);
 
         self.create_with_query_parameters(url, None::<()>, param)
             .await

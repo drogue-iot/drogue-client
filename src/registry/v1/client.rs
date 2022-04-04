@@ -84,14 +84,10 @@ where
     /// If the user does not have access to the API, the server side may return "not found"
     /// as a response instead of "forbidden".
     #[instrument]
-    pub async fn list_apps<L>(
+    pub async fn list_apps(
         &self,
         labels: Option<LabelSelector>,
-    ) -> ClientResult<Option<Vec<Application>>>
-    where
-        L: IntoIterator + Debug,
-        L::Item: AsRef<str>,
-    {
+    ) -> ClientResult<Option<Vec<Application>>> {
         let url = self.url(None, None)?;
 
         let labels = labels.map(|l| l.to_query_parameters());

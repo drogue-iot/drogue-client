@@ -4,8 +4,6 @@ mod parser;
 #[cfg(feature = "nom")]
 pub use parser::*;
 
-use futures::future::join;
-use nom::into;
 #[cfg(feature = "nom")]
 use std::convert::TryFrom;
 use std::fmt;
@@ -70,19 +68,27 @@ impl From<Operation> for LabelSelector {
     }
 }
 
-impl LabelSelector {
+impl std::ops::Add<Operation> for LabelSelector {
+    type Output = LabelSelector;
+
     /// Add another operation to a label selector.
     ///
-    pub fn add(mut self, op: Operation) -> Self {
+    fn add(mut self, op: Operation) -> Self {
         self.0.push(op);
-        return self;
+        self
+    }
+}
+
+impl LabelSelector {
+    pub fn new() -> Self {
+        LabelSelector(Vec::new())
     }
 
     /// Convert a LabelSelector into query parameters for use with reqwest
     ///
     pub fn to_query_parameters(&self) -> Vec<(String, String)> {
         let mut labs = Vec::new();
-        let _ = &self.0.iter().map(|op| labs.push(op.to_string().clone()));
+        let _ = &self.0.iter().map(|op| labs.push(op.to_string()));
 
         let labs = labs.join(",");
 

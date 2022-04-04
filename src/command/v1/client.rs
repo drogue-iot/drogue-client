@@ -78,7 +78,7 @@ where
         device: D,
         command: C,
         payload: Option<P>,
-    ) -> ClientResult<Option<bool>>
+    ) -> ClientResult<Option<()>>
     where
         A: AsRef<str> + Debug,
         D: AsRef<str> + Debug,

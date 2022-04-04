@@ -3,18 +3,11 @@ use nom::{
     branch::*, bytes::complete::*, character::complete::*, combinator::*, multi::*, sequence::*,
     AsChar, IResult,
 };
-use std::error::Error;
-use std::fmt::{Display, Formatter};
+use std::fmt::Formatter;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ParserError {
     details: String,
-}
-
-impl Display for ParserError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        todo!()
-    }
 }
 
 impl core::fmt::Display for ParserError {
