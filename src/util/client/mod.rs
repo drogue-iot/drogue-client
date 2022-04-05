@@ -201,21 +201,17 @@ where
         match response.status() {
             code if code.is_client_error() => {
                 let error = match response.json().await {
-                    Ok(json) => {
-                        ErrorInformation {
-                            error: json,
-                            message: format!("HTTP {}", code)
-                        }
+                    Ok(json) => ErrorInformation {
+                        error: json,
+                        message: format!("HTTP {}", code),
                     },
-                    Err(_) => {
-                        ErrorInformation {
-                            error: String::default(),
-                            message: format!("HTTP error {}", code)
-                        }
-                    }
+                    Err(_) => ErrorInformation {
+                        error: String::default(),
+                        message: format!("HTTP error {}", code),
+                    },
                 };
                 Err(ClientError::Service(error))
-            },
+            }
             code => Err(ClientError::Request(format!("Unexpected code {:?}", code))),
         }
     }

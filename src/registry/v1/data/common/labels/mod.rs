@@ -4,11 +4,13 @@ mod parser;
 #[cfg(feature = "nom")]
 pub use parser::*;
 
+use std::collections::HashMap;
 #[cfg(feature = "nom")]
 use std::convert::TryFrom;
 use std::fmt;
+use std::ops::Add;
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, PartialEq)]
 pub struct LabelSelector(pub Vec<Operation>);
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -79,6 +81,29 @@ impl std::ops::Add<Operation> for LabelSelector {
     }
 }
 
+// TODO is it possible to have a common implementation for
+// hashmap<String, String> and Vec<(String, String)> ?
+// maybe using the IntoIterator trait ?
+impl<K, V> From<HashMap<K, V>> for LabelSelector
+where
+    K: AsRef<str>,
+    V: AsRef<str>,
+{
+    /// Convert a HashMap into a LabelSelctor with multiple operations.
+    /// All the operations will be using the `Equals` operator.
+    fn from(collection: HashMap<K, V>) -> Self {
+        let mut selector = LabelSelector::new();
+
+        for (key, value) in collection.into_iter() {
+            selector = selector.add(Operation::Eq(
+                key.as_ref().to_string(),
+                value.as_ref().to_string(),
+            ));
+        }
+        selector
+    }
+}
+
 impl LabelSelector {
     pub fn new() -> Self {
         LabelSelector(Vec::new())
@@ -98,7 +123,9 @@ impl LabelSelector {
 
 #[cfg(test)]
 mod test {
-    use crate::registry::v1::labels::Operation;
+    use crate::registry::v1::labels::{LabelSelector, Operation};
+    use std::collections::HashMap;
+    use std::ops::Add;
 
     #[test]
     fn test_serialize_equals_operation() {
@@ -148,5 +175,19 @@ mod test {
     fn test_serialize_not_exists_operation() {
         let op = Operation::NotExists("power".to_string());
         assert_eq!(op.to_string(), "!power");
+    }
+
+    #[test]
+    fn test_from_map() {
+        let selector = LabelSelector::new()
+            .add(Operation::Eq("foo".to_string(), "bar".to_string()))
+            .add(Operation::Eq("fizz".to_string(), "buzz".to_string()));
+
+        let mut map = HashMap::new();
+        map.insert("fizz", "buzz");
+        map.insert("foo", "bar");
+        let selector_from_map: LabelSelector = map.into();
+
+        assert_eq!(selector_from_map, selector);
     }
 }
