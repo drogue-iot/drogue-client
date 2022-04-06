@@ -56,7 +56,7 @@ where
             path.extend(&["api", "tokens", "v1alpha1"]);
             if let Some(prefix) = prefix {
                 if !prefix.is_empty() {
-                    path.push(urlencoding::encode(prefix).as_str());
+                    path.push(prefix);
                 }
             }
         }

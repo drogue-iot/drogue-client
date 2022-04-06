@@ -58,9 +58,9 @@ where
                 "command",
                 "v1alpha1",
                 "apps",
-                &urlencoding::encode(application),
+                application,
                 "devices",
-                &urlencoding::encode(device),
+                device,
             ]);
         }
 

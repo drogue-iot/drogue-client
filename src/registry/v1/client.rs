@@ -59,13 +59,13 @@ where
             path.extend(&["api", "registry", "v1alpha1", "apps"]);
             if let Some(application) = application {
                 if !application.is_empty() {
-                    path.push(urlencoding::encode(application).as_str());
+                    path.push(application);
                 }
 
                 if let Some(device) = device {
                     path.push("devices");
                     if !device.is_empty() {
-                        path.push(urlencoding::encode(device).as_str());
+                        path.push(device);
                     }
                 }
             }

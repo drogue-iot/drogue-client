@@ -61,7 +61,7 @@ where
 
             path.extend(&["api", "admin", "v1alpha1", "apps"]);
             if !application.is_empty() {
-                path.push(urlencoding::encode(application).as_str());
+                path.push(application);
             }
             match operation {
                 AdministrationOperation::Transfer => path.push("transfer-ownership"),
