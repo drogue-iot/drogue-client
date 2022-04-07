@@ -67,6 +67,10 @@ where
 
 impl fmt::Display for ErrorInformation {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}: {}", self.error, self.message)
+        if self.error.is_empty() {
+            write!(f, "{}", self.message)
+        } else {
+            write!(f, "{}: {}", self.error, self.message)
+        }
     }
 }

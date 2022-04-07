@@ -1,6 +1,6 @@
 use super::data::*;
 use crate::error::ClientError;
-use crate::openid::{TokenInjector, TokenProvider};
+use crate::openid::TokenProvider;
 use crate::util::Client as ClientTrait;
 use std::fmt::Debug;
 use tracing::instrument;
@@ -84,22 +84,13 @@ where
     where
         D: AsRef<str> + Debug,
     {
-        // here we need to override the trait method as we need to add a query parameter with the description.
         let url = self.url(Some(""))?;
 
-        let mut query: Vec<(&str, &str)> = Vec::new();
-        if let Some(description) = description.as_ref() {
-            query.push(("description", description.as_ref()))
-        }
+        let param =
+            description.map(move |d| vec![("description".to_string(), d.as_ref().to_string())]);
 
-        let req = self
-            .client()
-            .post(url)
-            .query(&query)
-            .inject_token(self.token_provider())
-            .await?;
-
-        Self::create_response(req.send().await?).await
+        self.create_with_query_parameters(url, None::<()>, param)
+            .await
     }
 
     /// Delete an existing token for this user.

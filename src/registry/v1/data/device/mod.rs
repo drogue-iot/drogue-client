@@ -56,6 +56,32 @@ impl Device {
         // done
         true
     }
+
+    /// Create an minimal device object from the an application name and a device name
+    pub fn new<A, D>(application: A, device: D) -> Self
+    where
+        A: AsRef<str>,
+        D: AsRef<str>,
+    {
+        Device {
+            metadata: ScopedMetadata {
+                application: application.as_ref().into(),
+                name: device.as_ref().into(),
+                ..Default::default()
+            },
+            ..Default::default()
+        }
+    }
+
+    /// Insert a credential entry to the crendentials of a device.
+    /// If there are no credentials already existing an array is created
+    /// if there is an error deserializing the existing data an error is returned
+    pub fn add_credential(&mut self, credential: Credential) -> Result<(), serde_json::Error> {
+        self.update_section::<DeviceSpecCredentials, _>(|mut credentials| {
+            credentials.credentials.push(credential);
+            credentials
+        })
+    }
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Eq, PartialEq)]
@@ -247,43 +273,4 @@ pub struct DeviceSpecAliases(
 dialect!(DeviceSpecAliases [Section::Spec => "alias"]);
 
 #[cfg(test)]
-mod test {
-
-    use super::*;
-    use serde_json::json;
-
-    #[test]
-    fn deser_credentials() {
-        let des = serde_json::from_value::<Vec<Credential>>(json! {[
-            {"pass": "foo"},
-            {"pass": {"bcrypt": "$2a$12$/ooOoK.qKkqo2GvCvgt0ae076ak0Aa8VoLTW2Ei/WUgZ2n9kt1zZ2"}},
-            {"user": {"username": "foo", "password": "bar"}},
-            {"user": {"username": "foo", "password": {"sha512": "$6$ncx1PBP3mqha5Z7B$GXz/Q14oxbGcIx78lJ19Jxnx38v.Dp0zgmprUAWVjv4Y447SmBfUFLtDByZnoIneekTAPHjQS.osdZ3rYWdk/."}}}
-        ]});
-        assert_eq!(
-            des.unwrap(),
-            vec![
-                Credential::Password(Password::Plain("foo".into())),
-                Credential::Password(Password::BCrypt(
-                    "$2a$12$/ooOoK.qKkqo2GvCvgt0ae076ak0Aa8VoLTW2Ei/WUgZ2n9kt1zZ2".into()
-                )),
-                Credential::UsernamePassword {
-                    username: "foo".into(),
-                    password: Password::Plain("bar".into()),
-                    unique: false,
-                },
-                Credential::UsernamePassword {
-                    username: "foo".into(),
-                    password: Password::Sha512("$6$ncx1PBP3mqha5Z7B$GXz/Q14oxbGcIx78lJ19Jxnx38v.Dp0zgmprUAWVjv4Y447SmBfUFLtDByZnoIneekTAPHjQS.osdZ3rYWdk/.".into()),
-                    unique: false,
-                },
-            ]
-        )
-    }
-
-    #[test]
-    fn deser_aliases() {
-        let des = serde_json::from_value::<DeviceSpecAliases>(json!(["drogue", "iot"]));
-        assert_eq!(des.unwrap().0, vec!["drogue", "iot"]);
-    }
-}
+mod test;

@@ -45,6 +45,35 @@ impl AsMut<dyn CommonMetadataMut> for Application {
     }
 }
 
+impl Application {
+    /// Create an minimal application object from the an application name
+    pub fn new<A>(name: A) -> Self
+    where
+        A: AsRef<str>,
+    {
+        Application {
+            metadata: NonScopedMetadata {
+                name: name.as_ref().into(),
+                ..Default::default()
+            },
+            ..Default::default()
+        }
+    }
+
+    /// Insert a trust anchor entry to an application
+    /// If there are no trust anchors already existing an array is created
+    /// if there is an error deserializing the existing data an error is returned
+    pub fn add_trust_anchor(
+        &mut self,
+        anchor: ApplicationSpecTrustAnchorEntry,
+    ) -> Result<(), serde_json::Error> {
+        self.update_section::<ApplicationSpecTrustAnchors, _>(|mut credentials| {
+            credentials.anchors.push(anchor);
+            credentials
+        })
+    }
+}
+
 /// The application's trust-anchors.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Eq, PartialEq)]
 pub struct ApplicationSpecTrustAnchors {
@@ -139,3 +168,6 @@ impl Default for Authentication {
         Self::None
     }
 }
+
+#[cfg(test)]
+mod test;
