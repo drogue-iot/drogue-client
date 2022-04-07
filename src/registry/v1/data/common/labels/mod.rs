@@ -104,6 +104,22 @@ where
     }
 }
 
+impl<S> From<Vec<S>> for LabelSelector
+where
+    S: AsRef<str>,
+{
+    /// Convert a Vec<S> into a LabelSelctor with multiple operations.
+    /// All the operations will be using the `Exists` operator.
+    fn from(collection: Vec<S>) -> Self {
+        let mut selector = LabelSelector::new();
+
+        for str in collection.into_iter() {
+            selector = selector.add(Operation::Exists(str.as_ref().to_string()));
+        }
+        selector
+    }
+}
+
 impl LabelSelector {
     pub fn new() -> Self {
         LabelSelector(Vec::new())
@@ -189,5 +205,17 @@ mod test {
         let selector_from_map: LabelSelector = map.into();
 
         assert_eq!(selector_from_map, selector);
+    }
+
+    #[test]
+    fn test_from_vec() {
+        let selector = LabelSelector::new()
+            .add(Operation::Exists("foo".to_string()))
+            .add(Operation::Exists("bar".to_string()));
+
+        let vec = vec!["foo", "bar"];
+        let selector_from_vec: LabelSelector = vec.into();
+
+        assert_eq!(selector_from_vec, selector);
     }
 }
