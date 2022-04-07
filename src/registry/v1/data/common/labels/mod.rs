@@ -195,16 +195,20 @@ mod test {
 
     #[test]
     fn test_from_map() {
-        let selector = LabelSelector::new()
-            .add(Operation::Eq("foo".to_string(), "bar".to_string()))
-            .add(Operation::Eq("fizz".to_string(), "buzz".to_string()));
+        let op_one = Operation::Eq("foo".to_string(), "bar".to_string());
+        let op_two = Operation::Eq("fizz".to_string(), "buzz".to_string());
 
         let mut map = HashMap::new();
-        map.insert("fizz", "buzz");
         map.insert("foo", "bar");
+        map.insert("fizz", "buzz");
         let selector_from_map: LabelSelector = map.into();
 
-        assert_eq!(selector_from_map, selector);
+        // hashmap order is not consistent, so we cannot simply do
+        // assert_eq!(selector_from_map, selector);
+        // as it will fail if the keys are not in the same order.
+        assert!(selector_from_map.0.contains(&op_one));
+        assert!(selector_from_map.0.contains(&op_two));
+        assert_eq!(selector_from_map.0.len(), 2 as usize);
     }
 
     #[test]
