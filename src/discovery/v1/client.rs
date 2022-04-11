@@ -63,7 +63,7 @@ where
                 .map_err(|_| ClientError::Request("Failed to get paths".into()))?;
 
             if authenticated {
-                if let Some(_) = self.token_provider {
+                if self.token_provider.is_some() {
                     path.extend(&["api", "console", "v1alpha1", "info"]);
                 } else {
                     return Err(ClientError::Request(
@@ -106,13 +106,11 @@ where
     #[instrument]
     pub async fn get_sso_url(&self) -> ClientResult<Option<Url>> {
         self.get_authenticated_endpoints().await.map(|r| {
-            r.map(|endpoints| {
+            r.and_then(|endpoints| {
                 endpoints
                     .issuer_url
-                    .map(|url| Url::parse(url.as_str()).ok())
-                    .flatten()
+                    .and_then(|url| Url::parse(url.as_str()).ok())
             })
-            .flatten()
         })
     }
 }
