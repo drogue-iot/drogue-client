@@ -3,6 +3,7 @@ use crate::{
     openid::{Credentials, TokenProvider},
 };
 use async_trait::async_trait;
+use reqwest_wasm_ext::ReqwestExt;
 use tracing::instrument;
 
 /// Allows injecting tokens.
@@ -34,7 +35,7 @@ impl TokenInjector for reqwest::RequestBuilder {
         {
             Ok(match credentials {
                 Credentials::Bearer(token) => self.bearer_auth(token),
-                Credentials::Basic(username, password) => self.basic_auth(username, password),
+                Credentials::Basic(username, password) => self.basic_auth_ext(username, password),
             })
         } else {
             Ok(self)

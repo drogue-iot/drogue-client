@@ -1,6 +1,6 @@
 [package]
 name = "drogue-client"
-version = "0.9.1"
+version = "0.10.0"
 authors = ["Jens Reimann <jreimann@redhat.com>"]
 license = "Apache-2.0"
 description = "Clients for the Drogue IoT Cloud APIs"
@@ -10,18 +10,17 @@ categories = ["api-bindings"]
 keywords = ["IoT", "API"]
 readme = "README.md"
 
-edition = "2018"
+edition = "2021"
 
 [dependencies]
-
 async-std = "1"
 async-trait = "0.1"
 base64 = "0.13"
 base64-serde = "0.6"
 chrono = { version = "0.4", features = ["serde"] }
 futures = "0.3"
-indexmap = { version = "1", features = ["serde"] }
 humantime-serde = "1"
+indexmap = { version = "1", features = ["serde"] }
 log = "0.4"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
@@ -35,10 +34,14 @@ openid = { version = "0.9.1", optional = true }
 opentelemetry = { version = "0.17", optional = true }
 opentelemetry-http = { version = "0.6", optional = true }
 reqwest = { version = "0.11", optional = true }
+reqwest-wasm-ext = { git = "https://github.com/ctron/reqwest-wasm-ext.git", optional=true }
 
 [features]
 default = ["reqwest", "openid", "telemetry", "nom"]
 telemetry = ["opentelemetry", "opentelemetry-http", "http"]
+# alternate default target for wasm
+wasm = [ "reqwest", "reqwest-wasm-ext", "nom" ]
+reqwest = [ "dep:reqwest", "reqwest-wasm-ext"]
 
 [dev-dependencies]
 anyhow = "1"

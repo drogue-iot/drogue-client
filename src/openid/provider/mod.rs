@@ -1,8 +1,8 @@
 mod access_token;
+#[cfg(feature = "openid")]
 mod openid;
 
 pub use self::access_token::*;
-pub use self::openid::*;
 use std::convert::Infallible;
 use std::fmt::Debug;
 

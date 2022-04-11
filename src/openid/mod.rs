@@ -29,6 +29,7 @@ pub trait Expires {
     fn expires(&self) -> Option<chrono::DateTime<chrono::Utc>>;
 }
 
+#[cfg(feature = "openid")]
 impl Expires for openid::Bearer {
     fn expires(&self) -> Option<chrono::DateTime<chrono::Utc>> {
         self.expires
