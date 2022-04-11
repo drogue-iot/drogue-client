@@ -97,7 +97,9 @@ where
     #[instrument]
     pub async fn get_drogue_cloud_version(&self) -> ClientResult<Option<DrogueVersion>> {
         let url = self.api_url.join(".well-known/drogue-version")?;
-        self.read(url).await
+        let req = self.client().get(url);
+
+        Self::read_response(req.send().await?).await
     }
 
     /// Fetch drogue-cloud Single Sign On provider URL.
@@ -112,5 +114,53 @@ where
             })
             .flatten()
         })
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::discovery::v1::Client;
+    use crate::openid::NoTokenProvider;
+    use url::Url;
+
+    #[tokio::test]
+    async fn test_get_drogue_version() {
+        let client: Client<NoTokenProvider> = Client::new_anonymous(
+            reqwest::Client::new(),
+            Url::parse("https://api.sandbox.drogue.cloud").unwrap(),
+        );
+
+        let version = client.get_drogue_cloud_version().await;
+        assert!(version.is_ok());
+        let version = version.unwrap();
+
+        assert!(version.is_some());
+        let version = version.unwrap();
+        assert!(!version.version.is_empty());
+    }
+
+    #[tokio::test]
+    async fn test_get_drogue_public_endpoints() {
+        let client: Client<NoTokenProvider> = Client::new_anonymous(
+            reqwest::Client::new(),
+            Url::parse("https://api.sandbox.drogue.cloud").unwrap(),
+        );
+
+        let endpoints = client.get_public_endpoints().await;
+        assert!(endpoints.is_ok());
+        let endpoints = endpoints.unwrap();
+
+        assert!(endpoints.is_some());
+        let endpoints = endpoints.unwrap();
+
+        assert!(endpoints.issuer_url.is_some());
+        assert!(endpoints.api.is_some());
+        assert!(endpoints.registry.is_some());
+        assert!(endpoints.sso.is_some());
+
+        assert!(endpoints.http.is_none());
+        assert!(endpoints.mqtt.is_none());
+        assert!(endpoints.kafka_bootstrap_servers.is_none());
+        assert!(endpoints.mqtt_integration.is_none());
     }
 }

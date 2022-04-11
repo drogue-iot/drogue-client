@@ -42,3 +42,4 @@ telemetry = ["opentelemetry", "opentelemetry-http", "http"]
 
 [dev-dependencies]
 anyhow = "1"
+tokio = { version = "1.17.0", features = ["macros"] }
