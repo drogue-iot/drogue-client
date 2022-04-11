@@ -1,4 +1,4 @@
-use crate::core::WithTracing;
+use crate::core::PropagateCurrentContext;
 use crate::openid::TokenProvider;
 use crate::{error::ClientError, error::ErrorInformation, openid::TokenInjector};
 

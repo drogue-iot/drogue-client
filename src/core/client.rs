@@ -1,3 +1,31 @@
+pub trait PropagateCurrentContext {
+    fn propagate_current_context(self) -> Self
+    where
+        Self: Sized;
+}
+
+#[cfg(not(feature = "telemetry"))]
+impl PropagateCurrentContext for reqwest::RequestBuilder {
+    #[inline]
+    fn propagate_current_context(self) -> Self
+    where
+        Self: Sized,
+    {
+        self
+    }
+}
+
+#[cfg(feature = "telemetry")]
+impl PropagateCurrentContext for reqwest::RequestBuilder {
+    #[inline]
+    fn propagate_current_context(self) -> Self
+    where
+        Self: Sized,
+    {
+        self.propagate_context(&opentelemetry::Context::current())
+    }
+}
+
 #[cfg(feature = "telemetry")]
 pub use self::tracing::*;
 
@@ -10,13 +38,6 @@ mod tracing {
 
     pub trait WithTracing {
         fn propagate_context(self, cx: &Context) -> Self;
-
-        fn propagate_current_context(self) -> Self
-        where
-            Self: Sized,
-        {
-            self.propagate_context(&Context::current())
-        }
     }
 
     impl WithTracing for RequestBuilder {
