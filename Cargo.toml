@@ -41,7 +41,7 @@ default = ["reqwest", "openid", "telemetry", "nom"]
 telemetry = ["opentelemetry", "opentelemetry-http", "http"]
 # alternate default target for wasm
 wasm = [ "reqwest", "reqwest-wasm-ext", "nom" ]
-reqwest = [ "dep:reqwest", "reqwest-wasm-ext"]
+reqwest = [ "dep:reqwest", "reqwest/json", "reqwest-wasm-ext"]
 
 [dev-dependencies]
 anyhow = "1"
