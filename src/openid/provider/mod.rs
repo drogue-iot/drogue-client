@@ -3,6 +3,7 @@ mod access_token;
 mod openid;
 
 pub use self::access_token::*;
+pub use self::openid::*;
 use std::convert::Infallible;
 use std::fmt::Debug;
 
