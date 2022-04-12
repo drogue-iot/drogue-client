@@ -11,7 +11,8 @@ use url::Url;
 
 /// A drogue HTTP client, backed by reqwest.
 
-#[async_trait]
+#[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
+#[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 pub trait Client<TP>
 where
     TP: TokenProvider,
