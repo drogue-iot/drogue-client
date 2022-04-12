@@ -3,12 +3,13 @@ mod access_token;
 mod openid;
 
 pub use self::access_token::*;
+#[cfg(feature = "openid")]
 pub use self::openid::*;
-use std::convert::Infallible;
-use std::fmt::Debug;
 
 use crate::error::ClientError;
 use async_trait::async_trait;
+use std::convert::Infallible;
+use std::fmt::Debug;
 
 #[derive(Clone, Debug)]
 pub enum Credentials {
