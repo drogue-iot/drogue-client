@@ -45,3 +45,4 @@ reqwest = ["dep:reqwest", "reqwest-wasm-ext"]
 
 [dev-dependencies]
 anyhow = "1"
+tokio = { version = "1.17.0", features = ["macros"] }

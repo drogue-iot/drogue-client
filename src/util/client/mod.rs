@@ -23,7 +23,7 @@ where
     /// Retrieve the token provider
     fn token_provider(&self) -> &TP;
 
-    /// Execute a GET request to read a resouce content or to list resources
+    /// Execute a GET request to read a resource content or to list resources
     ///
     /// The correct authentication and tracing headers will be added to the request.
     #[doc(hidden)]
@@ -35,7 +35,7 @@ where
         self.read_with_query_parameters(url, None).await
     }
 
-    /// Execute a GET request to read a resouce content or to list resources
+    /// Execute a GET request to read a resource content or to list resources
     /// Optionally add query parameters.
     ///
     /// The correct authentication and tracing headers will be added to the request.
