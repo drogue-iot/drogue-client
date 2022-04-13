@@ -48,7 +48,7 @@ jobs:
           - wasm32-unknown-unknown
         include:
           - target: wasm32-unknown-unknown
-            features: "--no-default-features --feature wasm"
+            features: "--no-default-features --features wasm"
 
     steps:
 
