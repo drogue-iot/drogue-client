@@ -76,7 +76,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: check
-          args: --tests --target ${{ matrix.target }} ${{ matrix.features }}
+          args: --target ${{ matrix.target }} ${{ matrix.features }}
 
       - name: Run cargo clippy
         uses: actions-rs/cargo@v1
