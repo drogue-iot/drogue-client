@@ -60,6 +60,8 @@ pub struct Endpoints {
     pub local_certs: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub kafka_bootstrap_servers: Option<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub demos: Vec<(String, String)>,
 }
 
 impl Endpoints {
@@ -84,6 +86,7 @@ impl Endpoints {
             command_url: None,
             kafka_bootstrap_servers: None,
             local_certs: false,
+            demos: vec![],
         }
     }
 }
