@@ -22,7 +22,7 @@ pub struct RegistryEndpoint {
     pub url: String,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Deserialize, Serialize)]
 pub struct Endpoints {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub api: Option<String>,
