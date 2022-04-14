@@ -52,3 +52,12 @@ where
         }
     }
 }
+
+#[async_trait]
+impl TokenProvider for String {
+    type Error = Infallible;
+
+    async fn provide_access_token(&self) -> Result<Option<Credentials>, ClientError<Self::Error>> {
+        Ok(Some(Credentials::Bearer(self.clone())))
+    }
+}
