@@ -9,25 +9,14 @@ use tracing::instrument;
 /// Allows injecting tokens.
 #[async_trait]
 pub trait TokenInjector: Sized + Send + Sync {
-    async fn inject_token<TP>(
-        self,
-        token_provider: &TP,
-    ) -> Result<Self, ClientError<reqwest::Error>>
-    where
-        TP: TokenProvider;
+    async fn inject_token(self, token_provider: &dyn TokenProvider) -> Result<Self, ClientError>;
 }
 
 /// Injects tokens into a request by setting the authorization header to a "bearer" token.
 #[async_trait]
 impl TokenInjector for reqwest::RequestBuilder {
     #[instrument(skip(token_provider))]
-    async fn inject_token<TP>(
-        self,
-        token_provider: &TP,
-    ) -> Result<Self, ClientError<reqwest::Error>>
-    where
-        TP: TokenProvider,
-    {
+    async fn inject_token(self, token_provider: &dyn TokenProvider) -> Result<Self, ClientError> {
         if let Some(credentials) = token_provider
             .provide_access_token()
             .await

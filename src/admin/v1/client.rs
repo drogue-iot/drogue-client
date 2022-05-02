@@ -2,19 +2,16 @@ use super::data::*;
 use crate::error::ClientError;
 use crate::openid::TokenProvider;
 use crate::util::Client as TraitClient;
-use std::fmt::Debug;
+use std::{fmt::Debug, sync::Arc};
 use tracing::instrument;
 use url::Url;
 
 /// A client for drogue cloud application administration API, backed by reqwest.
 #[derive(Clone, Debug)]
-pub struct Client<TP>
-where
-    TP: TokenProvider,
-{
+pub struct Client {
     client: reqwest::Client,
     api_url: Url,
-    token_provider: TP,
+    token_provider: Arc<dyn TokenProvider>,
 }
 
 enum AdministrationOperation {
@@ -23,31 +20,29 @@ enum AdministrationOperation {
     Members,
 }
 
-type ClientResult<T> = Result<T, ClientError<reqwest::Error>>;
+type ClientResult<T> = Result<T, ClientError>;
 
-impl<TP> TraitClient<TP> for Client<TP>
-where
-    TP: TokenProvider,
-{
+impl TraitClient for Client {
     fn client(&self) -> &reqwest::Client {
         &self.client
     }
 
-    fn token_provider(&self) -> &TP {
-        &self.token_provider
+    fn token_provider(&self) -> &dyn TokenProvider {
+        self.token_provider.as_ref()
     }
 }
 
-impl<TP> Client<TP>
-where
-    TP: TokenProvider,
-{
+impl Client {
     /// Create a new client instance.
-    pub fn new(client: reqwest::Client, api_url: Url, token_provider: TP) -> Self {
+    pub fn new(
+        client: reqwest::Client,
+        api_url: Url,
+        token_provider: impl TokenProvider + 'static,
+    ) -> Self {
         Self {
             client,
             api_url,
-            token_provider,
+            token_provider: Arc::new(token_provider),
         }
     }
 

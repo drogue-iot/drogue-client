@@ -23,9 +23,7 @@ impl Debug for AccessTokenProvider {
 
 #[async_trait]
 impl TokenProvider for AccessTokenProvider {
-    type Error = reqwest::Error;
-
-    async fn provide_access_token(&self) -> Result<Option<Credentials>, ClientError<Self::Error>> {
+    async fn provide_access_token(&self) -> Result<Option<Credentials>, ClientError> {
         Ok(Some(Credentials::Basic(
             self.user.clone(),
             Some(self.token.clone()),
