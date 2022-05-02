@@ -8,7 +8,6 @@ pub use self::openid::*;
 
 use crate::error::ClientError;
 use async_trait::async_trait;
-use std::convert::Infallible;
 use std::fmt::Debug;
 
 #[derive(Clone, Debug)]
@@ -18,12 +17,8 @@ pub enum Credentials {
 }
 
 #[async_trait]
-pub trait TokenProvider: Clone + Send + Sync + Debug {
-    type Error: std::error::Error + Send + Sync + 'static;
-
-    async fn provide_access_token(
-        &self,
-    ) -> Result<Option<Credentials>, crate::error::ClientError<Self::Error>>;
+pub trait TokenProvider: Send + Sync + Debug {
+    async fn provide_access_token(&self) -> Result<Option<Credentials>, ClientError>;
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -31,9 +26,7 @@ pub struct NoTokenProvider;
 
 #[async_trait]
 impl TokenProvider for NoTokenProvider {
-    type Error = Infallible;
-
-    async fn provide_access_token(&self) -> Result<Option<Credentials>, ClientError<Self::Error>> {
+    async fn provide_access_token(&self) -> Result<Option<Credentials>, ClientError> {
         Ok(None)
     }
 }
@@ -43,9 +36,7 @@ impl<T> TokenProvider for Option<T>
 where
     T: TokenProvider + Sync,
 {
-    type Error = T::Error;
-
-    async fn provide_access_token(&self) -> Result<Option<Credentials>, ClientError<Self::Error>> {
+    async fn provide_access_token(&self) -> Result<Option<Credentials>, ClientError> {
         match self {
             None => Ok(None),
             Some(provider) => provider.provide_access_token().await,
@@ -55,9 +46,7 @@ where
 
 #[async_trait]
 impl TokenProvider for String {
-    type Error = Infallible;
-
-    async fn provide_access_token(&self) -> Result<Option<Credentials>, ClientError<Self::Error>> {
+    async fn provide_access_token(&self) -> Result<Option<Credentials>, ClientError> {
         Ok(Some(Credentials::Bearer(self.clone())))
     }
 }

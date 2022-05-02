@@ -13,13 +13,10 @@ pub struct ErrorInformation {
 }
 
 #[derive(thiserror::Error, Debug)]
-pub enum ClientError<E>
-where
-    E: std::error::Error + Send + Sync + 'static,
-{
+pub enum ClientError {
     /// An error from the underlying API client (e.g. reqwest).
     #[error("client error: {0}")]
-    Client(#[from] Box<E>),
+    Client(#[from] Box<dyn std::error::Error + Send + Sync>),
     /// A local error, performing the request.
     #[error("request error: {0}")]
     Request(String),
@@ -37,11 +34,8 @@ where
     Syntax(#[source] Box<dyn std::error::Error + Send + Sync>),
 }
 
-impl<E> ClientError<E>
-where
-    E: std::error::Error + Send + Sync + 'static,
-{
-    pub fn syntax<S>(err: S) -> ClientError<E>
+impl ClientError {
+    pub fn syntax<S>(err: S) -> ClientError
     where
         S: std::error::Error + Send + Sync + 'static,
     {
@@ -50,16 +44,13 @@ where
 }
 
 #[cfg(feature = "reqwest")]
-impl From<reqwest::Error> for ClientError<reqwest::Error> {
+impl From<reqwest::Error> for ClientError {
     fn from(err: reqwest::Error) -> Self {
         ClientError::Client(Box::new(err))
     }
 }
 
-impl<E> From<serde_json::Error> for ClientError<E>
-where
-    E: std::error::Error + Send + Sync + 'static,
-{
+impl From<serde_json::Error> for ClientError {
     fn from(err: serde_json::Error) -> Self {
         ClientError::Syntax(Box::new(err))
     }

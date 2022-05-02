@@ -13,23 +13,20 @@ use url::Url;
 
 #[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
 #[cfg_attr(not(target_arch = "wasm32"), async_trait)]
-pub trait Client<TP>
-where
-    TP: TokenProvider,
-{
+pub trait Client {
     /// Retrieve the http client
     fn client(&self) -> &reqwest::Client;
 
     /// Retrieve the token provider
-    fn token_provider(&self) -> &TP;
+    fn token_provider(&self) -> &dyn TokenProvider;
 
     /// Execute a GET request to read a resource content or to list resources
     ///
     /// The correct authentication and tracing headers will be added to the request.
     #[doc(hidden)]
-    async fn read<T>(&self, url: Url) -> Result<Option<T>, ClientError<reqwest::Error>>
+    async fn read<T>(&self, url: Url) -> Result<Option<T>, ClientError>
     where
-        Self: std::marker::Send,
+        Self: Send,
         T: DeserializeOwned,
     {
         self.read_with_query_parameters(url, None).await
@@ -44,9 +41,9 @@ where
         &self,
         url: Url,
         query: Option<Vec<(String, String)>>,
-    ) -> Result<Option<T>, ClientError<reqwest::Error>>
+    ) -> Result<Option<T>, ClientError>
     where
-        Self: std::marker::Send,
+        Self: Send,
         T: DeserializeOwned,
     {
         let query = query.unwrap_or_default();
@@ -64,7 +61,7 @@ where
 
     async fn read_response<T: DeserializeOwned>(
         response: Response,
-    ) -> Result<Option<T>, ClientError<reqwest::Error>> {
+    ) -> Result<Option<T>, ClientError> {
         log::debug!("Eval get response: {:#?}", response);
         match response.status() {
             StatusCode::OK => Ok(Some(response.json().await?)),
@@ -80,13 +77,9 @@ where
     ///
     /// The correct authentication and tracing headers will be added to the request.
     #[doc(hidden)]
-    async fn update<A>(
-        &self,
-        url: Url,
-        payload: Option<A>,
-    ) -> Result<bool, ClientError<reqwest::Error>>
+    async fn update<A>(&self, url: Url, payload: Option<A>) -> Result<bool, ClientError>
     where
-        Self: std::marker::Send,
+        Self: Send,
         A: Serialize + Send + Sync,
     {
         let req = if let Some(p) = payload {
@@ -101,7 +94,7 @@ where
         Self::update_response(req.send().await?).await
     }
 
-    async fn update_response(response: Response) -> Result<bool, ClientError<reqwest::Error>> {
+    async fn update_response(response: Response) -> Result<bool, ClientError> {
         log::debug!("Eval update response: {:#?}", response);
         match response.status() {
             StatusCode::OK | StatusCode::NO_CONTENT | StatusCode::ACCEPTED => Ok(true),
@@ -116,9 +109,9 @@ where
     ///
     /// The correct authentication and tracing headers will be added to the request.
     #[doc(hidden)]
-    async fn delete(&self, url: Url) -> Result<bool, ClientError<reqwest::Error>>
+    async fn delete(&self, url: Url) -> Result<bool, ClientError>
     where
-        Self: std::marker::Send,
+        Self: Send,
     {
         let req = self
             .client()
@@ -129,7 +122,7 @@ where
         Self::delete_response(req.send().await?).await
     }
 
-    async fn delete_response(response: Response) -> Result<bool, ClientError<reqwest::Error>> {
+    async fn delete_response(response: Response) -> Result<bool, ClientError> {
         log::debug!("Eval delete response: {:#?}", response);
         match response.status() {
             StatusCode::OK | StatusCode::NO_CONTENT => Ok(true),
@@ -142,11 +135,7 @@ where
     ///
     /// The correct authentication and tracing headers will be added to the request.
     #[doc(hidden)]
-    async fn create<P, T>(
-        &self,
-        url: Url,
-        payload: Option<P>,
-    ) -> Result<Option<T>, ClientError<reqwest::Error>>
+    async fn create<P, T>(&self, url: Url, payload: Option<P>) -> Result<Option<T>, ClientError>
     where
         Self: std::marker::Send,
         P: Serialize + Send + Sync,
@@ -165,7 +154,7 @@ where
         url: Url,
         payload: Option<P>,
         query: Option<Vec<(String, String)>>,
-    ) -> Result<Option<T>, ClientError<reqwest::Error>>
+    ) -> Result<Option<T>, ClientError>
     where
         Self: std::marker::Send,
         P: Serialize + Send + Sync,
@@ -188,7 +177,7 @@ where
 
     async fn create_response<T: DeserializeOwned>(
         response: Response,
-    ) -> Result<Option<T>, ClientError<reqwest::Error>> {
+    ) -> Result<Option<T>, ClientError> {
         log::debug!("Eval create response: {:#?}", response);
         match response.status() {
             StatusCode::CREATED | StatusCode::ACCEPTED => Ok(None),
@@ -198,7 +187,7 @@ where
         }
     }
 
-    async fn default_response<T>(response: Response) -> Result<T, ClientError<reqwest::Error>> {
+    async fn default_response<T>(response: Response) -> Result<T, ClientError> {
         match response.status() {
             code if code.is_client_error() => {
                 let error = match response.json().await {

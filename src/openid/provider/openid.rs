@@ -100,11 +100,7 @@ impl OpenIdTokenProvider {
 #[cfg(feature = "reqwest")]
 #[async_trait]
 impl TokenProvider for OpenIdTokenProvider {
-    type Error = reqwest::Error;
-
-    async fn provide_access_token(
-        &self,
-    ) -> Result<Option<Credentials>, crate::error::ClientError<reqwest::Error>> {
+    async fn provide_access_token(&self) -> Result<Option<Credentials>, crate::error::ClientError> {
         self.provide_token()
             .await
             .map(|token| Some(Credentials::Bearer(token.access_token)))

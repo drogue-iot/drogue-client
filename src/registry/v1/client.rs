@@ -4,46 +4,41 @@ use crate::registry::v1::labels::LabelSelector;
 use crate::util::Client as ClientTrait;
 use crate::{error::ClientError, Translator};
 use futures::{stream, StreamExt, TryStreamExt};
-use std::fmt::Debug;
+use std::{fmt::Debug, sync::Arc};
 use tracing::instrument;
 use url::Url;
 
 /// A device registry client
 #[derive(Clone, Debug)]
-pub struct Client<TP>
-where
-    TP: TokenProvider,
-{
+pub struct Client {
     client: reqwest::Client,
     registry_url: Url,
-    token_provider: TP,
+    token_provider: Arc<dyn TokenProvider>,
 }
 
-type ClientResult<T> = Result<T, ClientError<reqwest::Error>>;
+type ClientResult<T> = Result<T, ClientError>;
 
-impl<TP> ClientTrait<TP> for Client<TP>
-where
-    TP: TokenProvider,
-{
+impl ClientTrait for Client {
     fn client(&self) -> &reqwest::Client {
         &self.client
     }
 
-    fn token_provider(&self) -> &TP {
-        &self.token_provider
+    fn token_provider(&self) -> &dyn TokenProvider {
+        self.token_provider.as_ref()
     }
 }
 
-impl<TP> Client<TP>
-where
-    TP: TokenProvider,
-{
+impl Client {
     /// Create a new client instance.
-    pub fn new(client: reqwest::Client, registry_url: Url, token_provider: TP) -> Self {
+    pub fn new(
+        client: reqwest::Client,
+        registry_url: Url,
+        token_provider: impl TokenProvider + 'static,
+    ) -> Self {
         Self {
             client,
             registry_url,
-            token_provider,
+            token_provider: Arc::new(token_provider),
         }
     }
 

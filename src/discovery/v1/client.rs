@@ -1,56 +1,52 @@
 use super::data::*;
 use crate::error::ClientError;
-use crate::openid::TokenProvider;
+use crate::openid::{NoTokenProvider, TokenProvider};
 use crate::util::Client as TraitClient;
 use std::fmt::Debug;
+use std::sync::Arc;
 use tracing::instrument;
 use url::Url;
 
 /// A client to discover available drogue-cloud endpoints and their URL.
 #[derive(Clone, Debug)]
-pub struct Client<TP>
-where
-    TP: TokenProvider,
-{
+pub struct Client {
     client: reqwest::Client,
     api_url: Url,
-    token_provider: Option<TP>,
+    token_provider: Arc<dyn TokenProvider>,
 }
 
-type ClientResult<T> = Result<T, ClientError<reqwest::Error>>;
+type ClientResult<T> = Result<T, ClientError>;
 
-impl<TP> TraitClient<TP> for Client<TP>
-where
-    TP: TokenProvider,
-{
+impl TraitClient for Client {
     fn client(&self) -> &reqwest::Client {
         &self.client
     }
 
-    fn token_provider(&self) -> &TP {
-        self.token_provider.as_ref().unwrap()
+    fn token_provider(&self) -> &dyn TokenProvider {
+        self.token_provider.as_ref()
     }
 }
 
-impl<TP> Client<TP>
-where
-    TP: TokenProvider,
-{
+impl Client {
     /// Create a new unauthenticated client instance.
     pub fn new_anonymous(client: reqwest::Client, api_url: Url) -> Self {
         Self {
             client,
             api_url,
-            token_provider: None,
+            token_provider: Arc::new(NoTokenProvider),
         }
     }
 
     /// Create a new authenticated client instance.
-    pub fn new_authenticated(client: reqwest::Client, api_url: Url, token_provider: TP) -> Self {
+    pub fn new_authenticated(
+        client: reqwest::Client,
+        api_url: Url,
+        token_provider: impl TokenProvider + 'static,
+    ) -> Self {
         Self {
             client,
             api_url,
-            token_provider: Some(token_provider),
+            token_provider: Arc::new(token_provider),
         }
     }
 
@@ -63,13 +59,7 @@ where
                 .map_err(|_| ClientError::Request("Failed to get paths".into()))?;
 
             if authenticated {
-                if self.token_provider.is_some() {
-                    path.extend(&["api", "console", "v1alpha1", "info"]);
-                } else {
-                    return Err(ClientError::Request(
-                        "No token provider, the client is not authenticated.".into(),
-                    ));
-                }
+                path.extend(&["api", "console", "v1alpha1", "info"]);
             } else {
                 path.extend(&[".well-known", "drogue-endpoints"]);
             }
@@ -118,12 +108,11 @@ where
 #[cfg(test)]
 mod test {
     use crate::discovery::v1::Client;
-    use crate::openid::NoTokenProvider;
     use url::Url;
 
     #[tokio::test]
     async fn test_get_drogue_version() {
-        let client: Client<NoTokenProvider> = Client::new_anonymous(
+        let client: Client = Client::new_anonymous(
             reqwest::Client::new(),
             Url::parse("https://api.sandbox.drogue.cloud").unwrap(),
         );
@@ -139,7 +128,7 @@ mod test {
 
     #[tokio::test]
     async fn test_get_drogue_public_endpoints() {
-        let client: Client<NoTokenProvider> = Client::new_anonymous(
+        let client: Client = Client::new_anonymous(
             reqwest::Client::new(),
             Url::parse("https://api.sandbox.drogue.cloud").unwrap(),
         );
