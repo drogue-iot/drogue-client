@@ -1,5 +1,6 @@
 //! Error and error information.
 
+use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use url::ParseError;
@@ -9,6 +10,9 @@ use url::ParseError;
 pub struct ErrorInformation {
     /// A machine processable error type.
     pub error: String,
+    /// A machine processable HTTP Status code.
+    #[serde(with = "http_serde::status_code")]
+    pub status: StatusCode,
     /// A human readable error message.
     #[serde(default)]
     pub message: String,

@@ -194,15 +194,21 @@ pub trait Client {
                     Ok(json) => ErrorInformation {
                         error: json,
                         message: format!("HTTP {}", code),
+                        status: code,
                     },
                     Err(_) => ErrorInformation {
                         error: String::default(),
                         message: format!("HTTP error {}", code),
+                        status: code,
                     },
                 };
                 Err(ClientError::Service(error))
             }
-            code => Err(ClientError::Request(format!("Unexpected code {:?}", code))),
+            code => Err(ClientError::Service(ErrorInformation {
+                error: String::default(),
+                message: format!("Unexpected HTTP code {:?}", code),
+                status: code,
+            })),
         }
     }
 }

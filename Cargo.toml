@@ -29,6 +29,7 @@ tracing = "0.1"
 url = "2"
 
 http = { version = "0.2", optional = true }
+http-serde = { version = "1.1.0", optional = true }
 nom = { version = "6", optional = true }
 openid = { version = "0.9.1", optional = true }
 opentelemetry = { version = "0.17", optional = true }
@@ -37,10 +38,10 @@ reqwest = { version = "0.11", features = ["json"], optional = true }
 reqwest-wasm-ext = { git = "https://github.com/ctron/reqwest-wasm-ext.git", optional = true }
 
 [features]
-default = ["reqwest", "openid", "telemetry", "nom"]
+default = ["reqwest", "openid", "telemetry", "nom", "http-serde"]
 telemetry = ["opentelemetry", "opentelemetry-http", "http"]
 # alternate default target for wasm
-wasm = ["reqwest", "reqwest-wasm-ext", "nom"]
+wasm = ["reqwest", "reqwest-wasm-ext", "nom", "http-serde"]
 reqwest = ["dep:reqwest", "reqwest-wasm-ext"]
 
 [dev-dependencies]
