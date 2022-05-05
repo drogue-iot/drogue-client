@@ -15,7 +15,7 @@ pub trait TokenInjector: Sized + Send + Sync {
 /// Injects tokens into a request by setting the authorization header to a "bearer" token.
 #[async_trait]
 impl TokenInjector for reqwest::RequestBuilder {
-    #[instrument(skip(token_provider))]
+    #[instrument(level = "debug", skip(token_provider), err)]
     async fn inject_token(self, token_provider: &dyn TokenProvider) -> Result<Self, ClientError> {
         if let Some(credentials) = token_provider
             .provide_access_token()
