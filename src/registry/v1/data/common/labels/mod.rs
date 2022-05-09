@@ -108,7 +108,7 @@ impl<S> From<Vec<S>> for LabelSelector
 where
     S: AsRef<str>,
 {
-    /// Convert a Vec<S> into a LabelSelctor with multiple operations.
+    /// Convert a `Vec<S>` into a LabelSelctor with multiple operations.
     /// All the operations will be using the `Exists` operator.
     fn from(collection: Vec<S>) -> Self {
         let mut selector = LabelSelector::new();
