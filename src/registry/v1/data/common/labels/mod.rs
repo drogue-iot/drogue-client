@@ -128,12 +128,14 @@ impl LabelSelector {
     /// Convert a LabelSelector into query parameters for use with reqwest
     ///
     pub fn to_query_parameters(&self) -> Vec<(String, String)> {
-        let mut labs = Vec::new();
-        let _ = &self.0.iter().map(|op| labs.push(op.to_string()));
+        let labels = self
+            .0
+            .iter()
+            .map(|op| op.to_string())
+            .collect::<Vec<String>>()
+            .join(",");
 
-        let labs = labs.join(",");
-
-        vec![("labels".to_string(), labs)]
+        vec![("labels".to_string(), labels)]
     }
 }
 
@@ -221,5 +223,19 @@ mod test {
         let selector_from_vec: LabelSelector = vec.into();
 
         assert_eq!(selector_from_vec, selector);
+    }
+
+    #[test]
+    fn test_to_reqwest_query() {
+        let selector = LabelSelector::new()
+            .add(Operation::Exists("foo".to_string()))
+            .add(Operation::Exists("bar".to_string()))
+            .add(Operation::Eq("key".to_string(), "value".to_string()));
+
+        let str = "foo,bar,key=value";
+        let query = vec![("labels".to_string(), str.to_string())];
+        let query_from_selector = selector.to_query_parameters();
+
+        assert_eq!(query_from_selector, query);
     }
 }
