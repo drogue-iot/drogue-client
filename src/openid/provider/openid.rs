@@ -1,9 +1,9 @@
 use super::TokenProvider;
 use crate::openid::{Credentials, Expires};
-use async_std::sync::RwLock;
 use async_trait::async_trait;
 use core::fmt::{self, Debug, Formatter};
 use std::{ops::Deref, sync::Arc};
+use tokio::sync::RwLock;
 
 /// A provider which provides access tokens for clients.
 #[derive(Clone)]
