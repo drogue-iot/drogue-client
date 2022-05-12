@@ -1,3 +1,5 @@
+//! Error and error information.
+
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use url::ParseError;

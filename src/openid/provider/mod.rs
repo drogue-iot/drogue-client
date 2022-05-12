@@ -16,11 +16,13 @@ pub enum Credentials {
     Basic(String, Option<String>),
 }
 
+/// A provider for access credentials (mostly access tokens).
 #[async_trait]
 pub trait TokenProvider: Send + Sync + Debug {
     async fn provide_access_token(&self) -> Result<Option<Credentials>, ClientError>;
 }
 
+/// A token provider which does not provide tokens.
 #[derive(Debug, Clone, Copy)]
 pub struct NoTokenProvider;
 

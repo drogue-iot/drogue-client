@@ -5,7 +5,12 @@ use crate::{
 use async_trait::async_trait;
 use std::fmt::{Debug, Formatter};
 
-/// A token provider, using an Access Token as static token.
+/// A token provider, using user access tokens (not OAuth2 access tokens).
+///
+/// If you want to directly use an OAuth2 access token, you can pass the access token as a String,
+/// as `TokenProvider` is implemented for `String`. Also see: [token providers]
+///
+/// [token providers]: TokenProvider#implementors
 #[derive(Clone)]
 pub struct AccessTokenProvider {
     pub user: String,

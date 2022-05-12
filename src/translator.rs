@@ -2,6 +2,32 @@ use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 
 /// A translator for the data sections of a resource.
+///
+/// The translator trait, in combination with the [`Dialect`] trait allows easy access to
+/// spec and status section in a strongly typed fashion:
+///
+/// ```rust
+/// use drogue_client::{dialect, Section, Translator};
+/// use drogue_client::registry::v1::Application;
+///
+/// pub struct FooSpec {
+/// }
+///
+/// dialect!(FooSpec[Section::Spec => "foo"]);
+///
+/// fn work_with(app: &Application) {
+///   match app.section::<FooSpec>() {
+///     Some(Ok(foo)) => {
+///         // foo section existed and could be parsed.
+///     },
+///     Some(Err(err)) => {
+///         // foo section existed, but could not be parsed.
+///     },
+///     None => {
+///         // foo section did not exist.
+///     },
+///   }
+/// }
 pub trait Translator {
     fn spec(&self) -> &Map<String, Value>;
     fn status(&self) -> &Map<String, Value>;
@@ -97,13 +123,17 @@ pub trait Translator {
 /// An enum of main data sections.
 #[derive(Eq, PartialEq, Clone, Copy, Debug)]
 pub enum Section {
+    /// The `spec` section.
     Spec,
+    // The `status` section.
     Status,
 }
 
-/// A "dialect", of strongly types main sections.
+/// A "dialect", of strongly typed main section.
 pub trait Dialect {
+    /// The name of the field inside the section.
     fn key() -> &'static str;
+    /// The section.
     fn section() -> Section;
 }
 
@@ -140,6 +170,7 @@ pub trait Attribute {
     fn extract(dialect: Option<Result<Self::Dialect, serde_json::Error>>) -> Self::Output;
 }
 
+/// Implements the [`Attribute`] trait for an attribute/field of a dialect.
 #[macro_export]
 macro_rules! attribute {
     ($v:vis $dialect:ty [$name:ident : $output:ty] => | $value:ident | $($code:tt)* ) => {
@@ -157,6 +188,9 @@ macro_rules! attribute {
     };
 }
 
+/// Implements the [`Translator`] trait for a structure.
+///
+/// This macro requires that the struct has a `spec` and `status` field of type `Map<String, Value>`.
 #[macro_export]
 macro_rules! translator {
     ($name:ty) => {
