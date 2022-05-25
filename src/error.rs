@@ -5,17 +5,6 @@ use serde::{Deserialize, Serialize};
 use std::fmt;
 use url::ParseError;
 
-// /// A service error
-// /// Additional error information provided by the service may be contained in the error option
-// #[derive(Clone, Debug, Serialize, Deserialize)]
-// pub struct ServiceError {
-//     /// A machine processable HTTP Status code.
-//     #[serde(with = "http_serde::status_code")]
-//     pub code: StatusCode,
-//     /// Optional additional error information
-//     #[serde(default)]
-//     pub error: Option<ErrorInformation>,
-// }
 
 /// Additional error information.
 #[derive(Clone, Debug, Serialize, Deserialize)]
