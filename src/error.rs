@@ -1,5 +1,6 @@
 //! Error and error information.
 
+use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use url::ParseError;
@@ -23,8 +24,14 @@ pub enum ClientError {
     #[error("request error: {0}")]
     Request(String),
     /// A remote error, performing the request.
-    #[error("service error: {0}")]
-    Service(ErrorInformation),
+    #[error("service error. HTTP {0}")]
+    Response(StatusCode),
+    /// A remote error, performing the request, with additional details
+    #[error("service error. HTTP {code}. {error}")]
+    Service {
+        code: StatusCode,
+        error: ErrorInformation,
+    },
     /// A token provider error.
     #[error("token error: {0}")]
     Token(#[source] Box<dyn std::error::Error + Send + Sync>),
