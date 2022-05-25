@@ -1,6 +1,6 @@
 use crate::core::PropagateCurrentContext;
 use crate::openid::TokenProvider;
-use crate::{error::ClientError, error::ServiceError, openid::TokenInjector};
+use crate::{error::ClientError, openid::TokenInjector};
 
 use async_trait::async_trait;
 use reqwest::{Response, StatusCode};
@@ -65,10 +65,10 @@ pub trait Client {
         log::debug!("Eval get response: {:#?}", response);
         match response.status() {
             StatusCode::OK => Ok(Some(response.json().await?)),
-            StatusCode::NOT_FOUND => Err(ClientError::Service(ServiceError {
+            StatusCode::NOT_FOUND => Err(ClientError::Service{
                 code: StatusCode::NOT_FOUND,
                 error: response.json().await.ok(),
-            })),
+            }),
             _ => Self::default_response(response).await,
         }
     }
@@ -191,9 +191,9 @@ pub trait Client {
     }
 
     async fn default_response<T>(response: Response) -> Result<T, ClientError> {
-        Err(ClientError::Service(ServiceError {
+        Err(ClientError::Service {
             code: response.status(),
             error: response.json().await.ok(),
-        }))
+        })
     }
 }

@@ -5,17 +5,17 @@ use serde::{Deserialize, Serialize};
 use std::fmt;
 use url::ParseError;
 
-/// A service error
-/// Additional error information provided by the service may be contained in the error option
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct ServiceError {
-    /// A machine processable HTTP Status code.
-    #[serde(with = "http_serde::status_code")]
-    pub code: StatusCode,
-    /// Optional additional error information
-    #[serde(default)]
-    pub error: Option<ErrorInformation>,
-}
+// /// A service error
+// /// Additional error information provided by the service may be contained in the error option
+// #[derive(Clone, Debug, Serialize, Deserialize)]
+// pub struct ServiceError {
+//     /// A machine processable HTTP Status code.
+//     #[serde(with = "http_serde::status_code")]
+//     pub code: StatusCode,
+//     /// Optional additional error information
+//     #[serde(default)]
+//     pub error: Option<ErrorInformation>,
+// }
 
 /// Additional error information.
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -36,8 +36,8 @@ pub enum ClientError {
     #[error("request error: {0}")]
     Request(String),
     /// A remote error, performing the request.
-    #[error("service error: {0}")]
-    Service(ServiceError),
+    #[error("service error. HTTP {code}")]
+    Service { code: StatusCode, error: Option<ErrorInformation>},
     /// A token provider error.
     #[error("token error: {0}")]
     Token(#[source] Box<dyn std::error::Error + Send + Sync>),
@@ -77,16 +77,6 @@ impl fmt::Display for ErrorInformation {
             write!(f, "{}", self.message)
         } else {
             write!(f, "{}: {}", self.error, self.message)
-        }
-    }
-}
-
-impl fmt::Display for ServiceError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        if let Some(e) = self.error.clone() {
-            write!(f, "HTTP {}\n{}", self.code, e)
-        } else {
-            write!(f, "Error. HTTP {}", self.code)
         }
     }
 }
