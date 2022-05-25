@@ -66,6 +66,7 @@ pub trait Client {
         log::debug!("Eval get response: {:#?}", response);
         match response.status() {
             StatusCode::OK => Ok(Some(response.json().await?)),
+            StatusCode::NOT_FOUND => Ok(None),
             _ => Self::default_response(response).await,
         }
     }
