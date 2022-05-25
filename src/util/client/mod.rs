@@ -1,6 +1,6 @@
 use crate::core::PropagateCurrentContext;
 use crate::openid::TokenProvider;
-use crate::{error::ClientError, error::ErrorInformation, openid::TokenInjector};
+use crate::{error::ClientError, error::ServiceError, openid::TokenInjector};
 
 use async_trait::async_trait;
 use reqwest::{Response, StatusCode};
@@ -65,7 +65,10 @@ pub trait Client {
         log::debug!("Eval get response: {:#?}", response);
         match response.status() {
             StatusCode::OK => Ok(Some(response.json().await?)),
-            StatusCode::NOT_FOUND => Ok(None),
+            StatusCode::NOT_FOUND => Err(ClientError::Service(ServiceError {
+                code: StatusCode::NOT_FOUND,
+                error: response.json().await.ok(),
+            })),
             _ => Self::default_response(response).await,
         }
     }
@@ -188,27 +191,9 @@ pub trait Client {
     }
 
     async fn default_response<T>(response: Response) -> Result<T, ClientError> {
-        match response.status() {
-            code if code.is_client_error() => {
-                let error = match response.json().await {
-                    Ok(json) => ErrorInformation {
-                        error: json,
-                        message: format!("HTTP {}", code),
-                        status: code,
-                    },
-                    Err(_) => ErrorInformation {
-                        error: String::default(),
-                        message: format!("HTTP error {}", code),
-                        status: code,
-                    },
-                };
-                Err(ClientError::Service(error))
-            }
-            code => Err(ClientError::Service(ErrorInformation {
-                error: String::default(),
-                message: format!("Unexpected HTTP code {:?}", code),
-                status: code,
-            })),
-        }
+        Err(ClientError::Service(ServiceError {
+            code: response.status(),
+            error: response.json().await.ok(),
+        }))
     }
 }
