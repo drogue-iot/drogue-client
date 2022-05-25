@@ -5,7 +5,6 @@ use serde::{Deserialize, Serialize};
 use std::fmt;
 use url::ParseError;
 
-
 /// Additional error information.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ErrorInformation {
@@ -25,8 +24,14 @@ pub enum ClientError {
     #[error("request error: {0}")]
     Request(String),
     /// A remote error, performing the request.
-    #[error("service error. HTTP {code}")]
-    Service { code: StatusCode, error: Option<ErrorInformation>},
+    #[error("service error. HTTP {0}")]
+    Response(StatusCode),
+    /// A remote error, performing the request, with additional details
+    #[error("service error. HTTP {code}. {error}")]
+    Service {
+        code: StatusCode,
+        error: ErrorInformation,
+    },
     /// A token provider error.
     #[error("token error: {0}")]
     Token(#[source] Box<dyn std::error::Error + Send + Sync>),

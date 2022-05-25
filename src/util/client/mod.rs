@@ -2,6 +2,7 @@ use crate::core::PropagateCurrentContext;
 use crate::openid::TokenProvider;
 use crate::{error::ClientError, openid::TokenInjector};
 
+use crate::error::ErrorInformation;
 use async_trait::async_trait;
 use reqwest::{Response, StatusCode};
 use serde::de::DeserializeOwned;
@@ -65,10 +66,6 @@ pub trait Client {
         log::debug!("Eval get response: {:#?}", response);
         match response.status() {
             StatusCode::OK => Ok(Some(response.json().await?)),
-            StatusCode::NOT_FOUND => Err(ClientError::Service{
-                code: StatusCode::NOT_FOUND,
-                error: response.json().await.ok(),
-            }),
             _ => Self::default_response(response).await,
         }
     }
@@ -191,9 +188,10 @@ pub trait Client {
     }
 
     async fn default_response<T>(response: Response) -> Result<T, ClientError> {
-        Err(ClientError::Service {
-            code: response.status(),
-            error: response.json().await.ok(),
-        })
+        let code = response.status();
+        match response.json::<ErrorInformation>().await {
+            Ok(info) => Err(ClientError::Service { code, error: info }),
+            Err(_) => Err(ClientError::Response(code)),
+        }
     }
 }
