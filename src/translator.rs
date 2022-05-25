@@ -9,7 +9,9 @@ use serde_json::{Map, Value};
 /// ```rust
 /// use drogue_client::{dialect, Section, Translator};
 /// use drogue_client::registry::v1::Application;
+/// use serde::Deserialize;
 ///
+/// #[derive(Deserialize)]
 /// pub struct FooSpec {
 /// }
 ///
