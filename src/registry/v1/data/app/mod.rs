@@ -12,12 +12,15 @@ use std::time::Duration;
 use crate::{
     dialect,
     meta::v1::{CommonMetadata, CommonMetadataMut, NonScopedMetadata},
-    serde::{is_default, Base64Standard},
+    serde::{is_default},
     translator, Section, Translator,
 };
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
+use serde_with::serde_as;
+use serde_with::base64::Base64;
+
 
 /// An application, owning devices.
 #[derive(Clone, Default, Debug, Deserialize, Serialize, Eq, PartialEq)]
@@ -84,9 +87,10 @@ pub struct ApplicationSpecTrustAnchors {
 dialect!(ApplicationSpecTrustAnchors [Section::Spec => "trustAnchors"]);
 
 /// A single trust-anchor entry.
+#[serde_as]
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Eq, PartialEq)]
 pub struct ApplicationSpecTrustAnchorEntry {
-    #[serde(with = "Base64Standard")]
+    #[serde_as(as = "Base64")]
     pub certificate: Vec<u8>,
 }
 
@@ -99,13 +103,14 @@ pub struct ApplicationStatusTrustAnchors {
 dialect!(ApplicationStatusTrustAnchors [Section::Status => "trustAnchors"]);
 
 /// A single trust-anchor status.
+#[serde_as]
 #[derive(Clone, Debug, Deserialize, Serialize, Eq, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub enum ApplicationStatusTrustAnchorEntry {
     #[serde(rename_all = "camelCase")]
     Valid {
         subject: String,
-        #[serde(with = "Base64Standard")]
+        #[serde_as(as = "Base64")]
         certificate: Vec<u8>,
         not_before: DateTime<Utc>,
         not_after: DateTime<Utc>,
