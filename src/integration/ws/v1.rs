@@ -2,7 +2,9 @@
 
 /// Client-initiated functionality
 pub mod client {
+
     /// Protocol messages, sent by the client
+    #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
     pub enum Message {
         /// Set a new access token.
         ///
