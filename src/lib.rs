@@ -5,6 +5,7 @@ pub mod command;
 pub mod core;
 pub mod discovery;
 pub mod error;
+pub mod integration;
 pub mod meta;
 pub mod openid;
 pub mod registry;
