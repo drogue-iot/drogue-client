@@ -1,6 +1,6 @@
 use super::{authn, authz};
 use crate::{
-    core::CoreClient, error::ClientError, openid::TokenProvider, util::metrics::PassFailErrorExt,
+    core::CoreClient, error::ClientError, metrics::PassFailErrorExt, openid::TokenProvider,
 };
 use std::sync::Arc;
 use tracing::instrument;
