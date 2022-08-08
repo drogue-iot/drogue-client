@@ -1,6 +1,6 @@
 [package]
 name = "drogue-client"
-version = "0.10.1"
+version = "0.11.0"
 authors = ["Jens Reimann <jreimann@redhat.com>"]
 license = "Apache-2.0"
 description = "Clients for the Drogue IoT Cloud APIs"
@@ -30,7 +30,7 @@ url = "2"
 
 http = { version = "0.2", optional = true }
 nom = { version = "6", optional = true }
-openid = { version = "0.9.1", optional = true }
+openid = { version = "0.10", optional = true }
 opentelemetry = { version = "0.17", optional = true }
 opentelemetry-http = { version = "0.6", optional = true }
 reqwest = { version = "0.11.11", features = ["json"], optional = true } # requires 0.11.11+
