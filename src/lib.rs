@@ -7,6 +7,7 @@ pub mod discovery;
 pub mod error;
 pub mod integration;
 pub mod meta;
+pub mod metrics;
 pub mod openid;
 pub mod registry;
 pub mod tokens;
@@ -14,6 +15,5 @@ pub mod user;
 
 mod serde;
 mod translator;
-mod util;
 
 pub use translator::*;
