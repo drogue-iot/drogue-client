@@ -1,7 +1,7 @@
 use super::data::*;
+use crate::core::CoreClient;
 use crate::error::ClientError;
 use crate::openid::TokenProvider;
-use crate::util::Client as TraitClient;
 use std::{fmt::Debug, sync::Arc};
 use tracing::instrument;
 use url::Url;
@@ -22,7 +22,7 @@ enum AdministrationOperation {
 
 type ClientResult<T> = Result<T, ClientError>;
 
-impl TraitClient for Client {
+impl CoreClient for Client {
     fn client(&self) -> &reqwest::Client {
         &self.client
     }

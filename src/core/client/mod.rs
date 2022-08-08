@@ -1,3 +1,7 @@
+mod r#impl;
+
+pub(crate) use r#impl::CoreClient;
+
 pub trait PropagateCurrentContext {
     fn propagate_current_context(self) -> Self
     where

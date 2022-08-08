@@ -10,6 +10,7 @@ pub mod meta;
 pub mod openid;
 pub mod registry;
 pub mod tokens;
+pub mod user;
 
 mod serde;
 mod translator;

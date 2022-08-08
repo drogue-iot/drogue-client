@@ -1,12 +1,11 @@
-use crate::core::PropagateCurrentContext;
-use crate::openid::TokenProvider;
-use crate::{error::ClientError, openid::TokenInjector};
-
-use crate::error::ErrorInformation;
+use crate::{
+    core::PropagateCurrentContext,
+    error::{ClientError, ErrorInformation},
+    openid::{TokenInjector, TokenProvider},
+};
 use async_trait::async_trait;
 use reqwest::{Response, StatusCode};
-use serde::de::DeserializeOwned;
-use serde::Serialize;
+use serde::{de::DeserializeOwned, Serialize};
 use std::marker::Send;
 use url::Url;
 
@@ -14,7 +13,7 @@ use url::Url;
 
 #[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
 #[cfg_attr(not(target_arch = "wasm32"), async_trait)]
-pub trait Client {
+pub(crate) trait CoreClient {
     /// Retrieve the http client
     fn client(&self) -> &reqwest::Client;
 
@@ -37,7 +36,6 @@ pub trait Client {
     /// Optionally add query parameters.
     ///
     /// The correct authentication and tracing headers will be added to the request.
-    #[doc(hidden)]
     async fn read_with_query_parameters<T>(
         &self,
         url: Url,
@@ -77,7 +75,6 @@ pub trait Client {
     /// The resource must exist, otherwise `false` is returned.
     ///
     /// The correct authentication and tracing headers will be added to the request.
-    #[doc(hidden)]
     async fn update<A>(&self, url: Url, payload: Option<A>) -> Result<bool, ClientError>
     where
         Self: Send,
@@ -109,7 +106,6 @@ pub trait Client {
     /// The resource must exist, otherwise `false` is returned.
     ///
     /// The correct authentication and tracing headers will be added to the request.
-    #[doc(hidden)]
     async fn delete(&self, url: Url) -> Result<bool, ClientError>
     where
         Self: Send,
@@ -135,10 +131,9 @@ pub trait Client {
     /// Execute a POST request to create a resource.
     ///
     /// The correct authentication and tracing headers will be added to the request.
-    #[doc(hidden)]
     async fn create<P, T>(&self, url: Url, payload: Option<P>) -> Result<Option<T>, ClientError>
     where
-        Self: std::marker::Send,
+        Self: Send,
         P: Serialize + Send + Sync,
         T: DeserializeOwned,
     {
@@ -149,7 +144,6 @@ pub trait Client {
     /// Optionally add query parameters
     ///
     /// The correct authentication and tracing headers will be added to the request.
-    #[doc(hidden)]
     async fn create_with_query_parameters<P, T>(
         &self,
         url: Url,
@@ -157,7 +151,7 @@ pub trait Client {
         query: Option<Vec<(String, String)>>,
     ) -> Result<Option<T>, ClientError>
     where
-        Self: std::marker::Send,
+        Self: Send,
         P: Serialize + Send + Sync,
         T: DeserializeOwned,
     {

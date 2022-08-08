@@ -1,7 +1,7 @@
 use super::data::*;
+use crate::core::CoreClient;
 use crate::openid::TokenProvider;
 use crate::registry::v1::labels::LabelSelector;
-use crate::util::Client as ClientTrait;
 use crate::{error::ClientError, Translator};
 use futures::{stream, StreamExt, TryStreamExt};
 use std::{fmt::Debug, sync::Arc};
@@ -18,7 +18,7 @@ pub struct Client {
 
 type ClientResult<T> = Result<T, ClientError>;
 
-impl ClientTrait for Client {
+impl CoreClient for Client {
     fn client(&self) -> &reqwest::Client {
         &self.client
     }

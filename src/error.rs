@@ -26,6 +26,9 @@ pub enum ClientError {
     /// A remote error, performing the request.
     #[error("service error. HTTP {0}")]
     Response(StatusCode),
+    /// The request was processed, but the response was unexpected.
+    #[error("unexpected response: {0}")]
+    UnexpectedResponse(String),
     /// A remote error, performing the request, with additional details
     #[error("service error. HTTP {code}. {error}")]
     Service {

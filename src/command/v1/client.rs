@@ -1,6 +1,6 @@
+use crate::core::CoreClient;
 use crate::error::ClientError;
 use crate::openid::TokenProvider;
-use crate::util::Client as TraitClient;
 use serde::Serialize;
 use std::{fmt::Debug, sync::Arc};
 use tracing::instrument;
@@ -16,7 +16,7 @@ pub struct Client {
 
 type ClientResult<T> = Result<T, ClientError>;
 
-impl TraitClient for Client {
+impl CoreClient for Client {
     fn client(&self) -> &reqwest::Client {
         &self.client
     }
