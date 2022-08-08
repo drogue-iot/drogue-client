@@ -1,6 +1,6 @@
 //! Metrics support for clients
 
-use drogue_bazaar_core::metrics::{AsPassFailError, PassFailError};
+pub use drogue_bazaar_core::metrics::{AsPassFail, AsPassFailError, PassFail, PassFailError};
 use prometheus::IntGaugeVec;
 
 pub trait PassFailErrorExt {
