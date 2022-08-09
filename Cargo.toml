@@ -24,7 +24,7 @@ log = "0.4"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 thiserror = "1"
-tokio = "1"
+tokio = { version = "1", features = ["sync"] }
 tracing = "0.1"
 url = "2"
 
@@ -40,7 +40,13 @@ prometheus = { version = "0.13", optional = true }
 
 [features]
 default = ["reqwest", "openid", "telemetry", "nom"]
-telemetry = ["opentelemetry", "opentelemetry-http", "http", "lazy_static", "prometheus"]
+telemetry = [
+    "http",
+    "lazy_static",
+    "opentelemetry",
+    "opentelemetry-http",
+    "prometheus"
+]
 # alternate default target for wasm
 wasm = ["reqwest", "nom"]
 

@@ -1,10 +1,11 @@
 use super::{authn, authz};
-use crate::{
-    core::CoreClient, error::ClientError, metrics::PassFailErrorExt, openid::TokenProvider,
-};
+use crate::{core::CoreClient, error::ClientError, openid::TokenProvider};
 use std::sync::Arc;
 use tracing::instrument;
 use url::Url;
+
+#[cfg(feature = "telemetry")]
+use crate::metrics::PassFailErrorExt;
 
 #[cfg(feature = "telemetry")]
 lazy_static::lazy_static! {
@@ -65,10 +66,12 @@ impl Client {
         let resp = self
             .create(self.authn_url.clone(), Some(&request))
             .await?
-            .ok_or_else(|| ClientError::UnexpectedResponse("Missing response payload".to_string()))
-            .record_outcome(&AUTHENTICATION)?;
+            .ok_or_else(|| ClientError::UnexpectedResponse("Missing response payload".to_string()));
 
-        Ok(resp)
+        #[cfg(feature = "telemetry")]
+        let resp = resp.record_outcome(&AUTHENTICATION);
+
+        Ok(resp?)
     }
 
     #[instrument]
@@ -79,9 +82,11 @@ impl Client {
         let resp = self
             .create(self.authz_url.clone(), Some(&request))
             .await?
-            .ok_or_else(|| ClientError::UnexpectedResponse("Missing response payload".to_string()))
-            .record_outcome(&AUTHORIZATION)?;
+            .ok_or_else(|| ClientError::UnexpectedResponse("Missing response payload".to_string()));
 
-        Ok(resp)
+        #[cfg(feature = "telemetry")]
+        let resp = resp.record_outcome(&AUTHORIZATION);
+
+        Ok(resp?)
     }
 }
