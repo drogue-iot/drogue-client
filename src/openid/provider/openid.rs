@@ -1,6 +1,4 @@
-use super::TokenProvider;
-use crate::openid::{Credentials, Expires};
-use async_trait::async_trait;
+use crate::openid::Expires;
 use core::fmt::{self, Debug, Formatter};
 use std::{ops::Deref, sync::Arc};
 use tokio::sync::RwLock;
@@ -97,13 +95,19 @@ impl OpenIdTokenProvider {
     }
 }
 
-#[cfg(feature = "reqwest")]
-#[async_trait]
+#[cfg(all(feature = "reqwest", not(target_arch = "wasm32")))]
+use crate::{
+    error::ClientError,
+    openid::{provider::TokenProvider, Credentials},
+};
+
+#[cfg(all(feature = "reqwest", not(target_arch = "wasm32")))]
+#[async_trait::async_trait]
 impl TokenProvider for OpenIdTokenProvider {
-    async fn provide_access_token(&self) -> Result<Option<Credentials>, crate::error::ClientError> {
+    async fn provide_access_token(&self) -> Result<Option<Credentials>, ClientError> {
         self.provide_token()
             .await
             .map(|token| Some(Credentials::Bearer(token.access_token)))
-            .map_err(|err| crate::error::ClientError::Token(Box::new(err)))
+            .map_err(|err| ClientError::Token(Box::new(err)))
     }
 }
