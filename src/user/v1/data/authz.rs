@@ -1,5 +1,5 @@
+use crate::metrics::{AsPassFail, PassFail};
 use core::fmt;
-use drogue_bazaar_core::metrics::{AsPassFail, PassFail};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]

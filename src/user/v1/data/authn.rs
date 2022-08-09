@@ -1,5 +1,7 @@
-use crate::user::v1::UserDetails;
-use drogue_bazaar_core::metrics::{AsPassFail, PassFail};
+use crate::{
+    metrics::{AsPassFail, PassFail},
+    user::v1::UserDetails,
+};
 use serde::{Deserialize, Serialize};
 
 /// Authenticate a user using a password request.
