@@ -10,7 +10,7 @@ use std::convert::TryFrom;
 use std::fmt;
 use std::ops::Add;
 
-#[derive(Default, Debug, PartialEq)]
+#[derive(Default, Debug, PartialEq, Eq)]
 pub struct LabelSelector(pub Vec<Operation>);
 
 #[derive(Clone, Debug, PartialEq, Eq)]

@@ -71,7 +71,7 @@ impl Client {
         #[cfg(feature = "telemetry")]
         let resp = resp.record_outcome(&AUTHENTICATION);
 
-        Ok(resp?)
+        resp
     }
 
     #[instrument]
@@ -87,6 +87,6 @@ impl Client {
         #[cfg(feature = "telemetry")]
         let resp = resp.record_outcome(&AUTHORIZATION);
 
-        Ok(resp?)
+        resp
     }
 }
