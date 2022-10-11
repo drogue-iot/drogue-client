@@ -1,13 +1,14 @@
 use crate::{
     attribute, dialect,
     meta::v1::{CommonMetadata, CommonMetadataMut, ScopedMetadata},
-    serde::is_default,
+    serde::{is_default, Base64Standard},
     translator, Dialect, Section, Translator,
 };
+use chrono::{DateTime, Utc};
 use core::fmt::{self, Formatter};
 use serde::{de::MapAccess, Deserialize, Deserializer, Serialize};
 use serde_json::{Map, Value};
-use std::collections::HashMap;
+use std::{cmp::Ordering, collections::HashMap};
 
 /// A device.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Eq, PartialEq)]
@@ -77,9 +78,9 @@ impl Device {
     /// If there are no credentials already existing an array is created
     /// if there is an error deserializing the existing data an error is returned
     pub fn add_credential(&mut self, credential: Credential) -> Result<(), serde_json::Error> {
-        self.update_section::<DeviceSpecCredentials, _>(|mut credentials| {
-            credentials.credentials.push(credential);
-            credentials
+        self.update_section::<DeviceSpecAuthentication, _>(|mut auth| {
+            auth.credentials.push(credential);
+            auth
         })
     }
 }
@@ -147,6 +148,8 @@ pub enum Credential {
     Password(Password),
     #[serde(rename = "cert")]
     Certificate(String),
+    #[serde(rename = "psk")]
+    PreSharedKey(PreSharedKey),
 }
 
 #[derive(Clone, Serialize, PartialEq, Eq)]
@@ -157,6 +160,75 @@ pub enum Password {
     BCrypt(String),
     #[serde(rename = "sha512")]
     Sha512(String),
+}
+
+/// Configured device credentials.
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Eq, PartialEq)]
+pub struct DeviceSpecAuthentication {
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub credentials: Vec<Credential>,
+}
+
+impl Dialect for DeviceSpecAuthentication {
+    fn key() -> &'static str {
+        "authentication"
+    }
+    fn section() -> Section {
+        Section::Spec
+    }
+}
+
+#[derive(Clone, Serialize, Deserialize, PartialEq, Eq, Ord)]
+pub struct PreSharedKey {
+    #[serde(with = "Base64Standard")]
+    pub key: Vec<u8>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub validity: Option<Validity>,
+}
+
+impl fmt::Debug for PreSharedKey {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "key=..., validity: {:?}", self.validity)
+    }
+}
+
+impl PartialOrd for PreSharedKey {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        if self.validity.is_none() && other.validity.is_none() {
+            Some(Ordering::Equal)
+        } else if self.validity.is_none() {
+            Some(Ordering::Less)
+        } else if other.validity.is_none() {
+            Some(Ordering::Equal)
+        } else {
+            self.validity.partial_cmp(&other.validity)
+        }
+    }
+}
+
+#[derive(Clone, Serialize, Deserialize, PartialEq, Eq, Debug, Ord)]
+pub struct Validity {
+    #[serde(rename = "notBefore")]
+    pub not_before: DateTime<Utc>,
+    #[serde(rename = "notAfter")]
+    pub not_after: DateTime<Utc>,
+}
+
+impl PartialOrd for Validity {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(if self.not_before < other.not_before {
+            Ordering::Less
+        } else {
+            if self.not_after > other.not_after {
+                Ordering::Less
+            } else if self.not_after == other.not_after {
+                Ordering::Equal
+            } else {
+                Ordering::Greater
+            }
+        })
+    }
 }
 
 impl<'de> Deserialize<'de> for Password {
