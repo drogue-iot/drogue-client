@@ -58,6 +58,7 @@ impl Client {
         }
     }
 
+    #[allow(clippy::let_and_return)]
     #[instrument]
     pub async fn authenticate_access_token(
         &self,
@@ -74,6 +75,7 @@ impl Client {
         resp
     }
 
+    #[allow(clippy::let_and_return)]
     #[instrument]
     pub async fn authorize(
         &self,
