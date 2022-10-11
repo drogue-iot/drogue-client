@@ -69,9 +69,7 @@ impl Client {
             .ok_or_else(|| ClientError::UnexpectedResponse("Missing response payload".to_string()));
 
         #[cfg(feature = "telemetry")]
-        let resp = resp.record_outcome(&AUTHENTICATION);
-
-        Ok(resp?)
+        resp.record_outcome(&AUTHENTICATION)
     }
 
     #[instrument]
@@ -85,8 +83,6 @@ impl Client {
             .ok_or_else(|| ClientError::UnexpectedResponse("Missing response payload".to_string()));
 
         #[cfg(feature = "telemetry")]
-        let resp = resp.record_outcome(&AUTHORIZATION);
-
-        Ok(resp?)
+        resp.record_outcome(&AUTHORIZATION)
     }
 }
