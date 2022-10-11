@@ -97,13 +97,16 @@ fn create_add_credential() {
     let creds = device.section::<DeviceSpecCredentials>();
     assert!(creds.is_none());
 
+    let creds = device.section::<DeviceSpecAuthentication>();
+    assert!(creds.is_none());
+
     let password = Credential::Password {
         0: Password::Plain("very_secret".into()),
     };
     device.add_credential(password.clone()).unwrap();
 
     let creds = device.section::<DeviceSpecCredentials>();
-    assert!(creds.is_none());
+    assert!(creds.is_some());
 
     let creds = device.section::<DeviceSpecAuthentication>();
     assert!(creds.is_some());
