@@ -78,10 +78,29 @@ impl Device {
     /// If there are no credentials already existing an array is created
     /// if there is an error deserializing the existing data an error is returned
     pub fn add_credential(&mut self, credential: Credential) -> Result<(), serde_json::Error> {
+        // TODO: Remove before drg version 0.12.x
+        self.update_section::<DeviceSpecCredentials, _>(|mut auth| {
+            auth.credentials.push(credential.clone());
+            auth
+        })?;
         self.update_section::<DeviceSpecAuthentication, _>(|mut auth| {
             auth.credentials.push(credential);
             auth
         })
+    }
+
+    /// Retrieve the credentials of this device
+    pub fn get_credentials(&self) -> Option<Vec<Credential>> {
+        let credentials = match self.section::<DeviceSpecAuthentication>() {
+            Some(Ok(auth)) => auth.credentials,
+            _ => match self.section::<DeviceSpecCredentials>() {
+                Some(Ok(credentials)) => credentials.credentials,
+                _ => {
+                    return None;
+                }
+            },
+        };
+        Some(credentials)
     }
 }
 
