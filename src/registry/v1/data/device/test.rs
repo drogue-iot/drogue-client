@@ -1,4 +1,5 @@
 use super::*;
+use chrono::Duration;
 use serde_json::json;
 
 #[derive(Debug)]
@@ -27,7 +28,9 @@ fn deser_credentials() {
         {"pass": "foo"},
         {"pass": {"bcrypt": "$2a$12$/ooOoK.qKkqo2GvCvgt0ae076ak0Aa8VoLTW2Ei/WUgZ2n9kt1zZ2"}},
         {"user": {"username": "foo", "password": "bar"}},
-        {"user": {"username": "foo", "password": {"sha512": "$6$ncx1PBP3mqha5Z7B$GXz/Q14oxbGcIx78lJ19Jxnx38v.Dp0zgmprUAWVjv4Y447SmBfUFLtDByZnoIneekTAPHjQS.osdZ3rYWdk/."}}}
+        {"user": {"username": "foo", "password": {"sha512": "$6$ncx1PBP3mqha5Z7B$GXz/Q14oxbGcIx78lJ19Jxnx38v.Dp0zgmprUAWVjv4Y447SmBfUFLtDByZnoIneekTAPHjQS.osdZ3rYWdk/."}}},
+        {"psk": {"key": "bWV0YWxsaWNh"}},
+        {"psk": {"key": "bWFkcnVnYWRh", "validity": { "notBefore": "2022-10-05T07:05:26Z", "notAfter": "2022-10-06T07:05:26Z" }}}
     ]});
     assert_eq!(
         des.unwrap(),
@@ -46,6 +49,18 @@ fn deser_credentials() {
                 password: Password::Sha512("$6$ncx1PBP3mqha5Z7B$GXz/Q14oxbGcIx78lJ19Jxnx38v.Dp0zgmprUAWVjv4Y447SmBfUFLtDByZnoIneekTAPHjQS.osdZ3rYWdk/.".into()),
                 unique: false,
             },
+            Credential::PreSharedKey(PreSharedKey {
+                key: b"metallica".to_vec(),
+                validity: None,
+
+            }),
+            Credential::PreSharedKey(PreSharedKey {
+                key: b"madrugada".to_vec(),
+                validity: Some(Validity {
+                    not_before: DateTime::parse_from_rfc3339("2022-10-05T07:05:26Z").unwrap().into(),
+                    not_after: DateTime::parse_from_rfc3339("2022-10-06T07:05:26Z").unwrap().into(),
+                }),
+            }),
         ]
     )
 }
@@ -88,9 +103,59 @@ fn create_add_credential() {
     device.add_credential(password.clone()).unwrap();
 
     let creds = device.section::<DeviceSpecCredentials>();
+    assert!(creds.is_none());
+
+    let creds = device.section::<DeviceSpecAuthentication>();
     assert!(creds.is_some());
 
     let password_extracted = creds.unwrap().unwrap();
     assert!(!password_extracted.credentials.is_empty());
     assert_eq!(password_extracted.credentials[0], password);
+}
+
+#[test]
+fn psk_ordering() {
+    let base: DateTime<Utc> = DateTime::<Utc>::MIN_UTC;
+
+    let no_validity = PreSharedKey {
+        key: b"foo".to_vec(),
+        validity: None,
+    };
+
+    let oldest = PreSharedKey {
+        key: b"foo".to_vec(),
+        validity: Some(Validity {
+            not_before: base,
+            not_after: base + Duration::days(10),
+        }),
+    };
+
+    let newer = PreSharedKey {
+        key: b"foo".to_vec(),
+        validity: Some(Validity {
+            not_before: base + Duration::days(3),
+            not_after: base + Duration::days(11),
+        }),
+    };
+
+    let newest = PreSharedKey {
+        key: b"foo".to_vec(),
+        validity: Some(Validity {
+            not_before: base + Duration::days(5),
+            not_after: base + Duration::days(11),
+        }),
+    };
+
+    let mut keys = vec![
+        newest.clone(),
+        newer.clone(),
+        no_validity.clone(),
+        oldest.clone(),
+    ];
+    keys.sort();
+
+    assert_eq!(keys[0], no_validity);
+    assert_eq!(keys[1], oldest);
+    assert_eq!(keys[2], newer);
+    assert_eq!(keys[3], newest);
 }
