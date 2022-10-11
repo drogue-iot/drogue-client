@@ -144,10 +144,9 @@ mod test {
         assert!(endpoints.api.is_some());
         assert!(endpoints.registry.is_some());
         assert!(endpoints.sso.is_some());
-
-        assert!(endpoints.http.is_none());
-        assert!(endpoints.mqtt.is_none());
-        assert!(endpoints.kafka_bootstrap_servers.is_none());
-        assert!(endpoints.mqtt_integration.is_none());
+        assert!(endpoints.http.is_some());
+        assert!(endpoints.mqtt.is_some());
+        assert!(endpoints.kafka_bootstrap_servers.is_some());
+        assert!(endpoints.mqtt_integration.is_some());
     }
 }
