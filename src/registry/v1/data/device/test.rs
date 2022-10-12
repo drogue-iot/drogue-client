@@ -162,3 +162,19 @@ fn psk_ordering() {
     assert_eq!(keys[2], newer);
     assert_eq!(keys[3], newest);
 }
+
+#[test]
+fn psk_validity() {
+    let base: DateTime<Utc> = DateTime::<Utc>::MIN_UTC;
+
+    let validity = Validity {
+        not_before: base + Duration::days(5),
+        not_after: base + Duration::days(7),
+    };
+
+    assert!(!validity.is_valid(DateTime::<Utc>::MIN_UTC + Duration::days(4)));
+    assert!(validity.is_valid(DateTime::<Utc>::MIN_UTC + Duration::days(5)));
+    assert!(validity.is_valid(DateTime::<Utc>::MIN_UTC + Duration::days(6)));
+    assert!(validity.is_valid(DateTime::<Utc>::MIN_UTC + Duration::days(7)));
+    assert!(!validity.is_valid(DateTime::<Utc>::MIN_UTC + Duration::days(8)));
+}

@@ -236,7 +236,7 @@ pub struct Validity {
 
 impl Validity {
     pub fn is_valid(&self, now: DateTime<Utc>) -> bool {
-        self.not_before <= now && self.not_after > now
+        self.not_before <= now && self.not_after >= now
     }
 }
 
