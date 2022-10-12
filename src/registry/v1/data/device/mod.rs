@@ -198,7 +198,7 @@ impl Dialect for DeviceSpecAuthentication {
     }
 }
 
-#[derive(Clone, Serialize, Deserialize, PartialEq, Eq, Ord)]
+#[derive(Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct PreSharedKey {
     #[serde(with = "Base64Standard")]
     pub key: Vec<u8>,
@@ -226,7 +226,14 @@ impl PartialOrd for PreSharedKey {
     }
 }
 
-#[derive(Clone, Serialize, Deserialize, PartialEq, Eq, Debug, Ord)]
+impl Ord for PreSharedKey {
+    fn cmp(&self, other: &Self) -> Ordering {
+        // We know it never returns None
+        self.partial_cmp(other).unwrap()
+    }
+}
+
+#[derive(Clone, Serialize, Deserialize, PartialEq, Eq, Debug)]
 pub struct Validity {
     #[serde(rename = "notBefore")]
     pub not_before: DateTime<Utc>,
@@ -244,15 +251,22 @@ impl PartialOrd for Validity {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(if self.not_before < other.not_before {
             Ordering::Less
+        } else if self.not_before > other.not_before {
+            Ordering::Greater
+        } else if self.not_after > other.not_after {
+            Ordering::Less
+        } else if self.not_after < other.not_after {
+            Ordering::Greater
         } else {
-            if self.not_after > other.not_after {
-                Ordering::Less
-            } else if self.not_after == other.not_after {
-                Ordering::Equal
-            } else {
-                Ordering::Greater
-            }
+            Ordering::Equal
         })
+    }
+}
+
+impl Ord for Validity {
+    fn cmp(&self, other: &Self) -> Ordering {
+        // We know it never returns None
+        self.partial_cmp(other).unwrap()
     }
 }
 
