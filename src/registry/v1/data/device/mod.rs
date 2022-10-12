@@ -234,6 +234,12 @@ pub struct Validity {
     pub not_after: DateTime<Utc>,
 }
 
+impl Validity {
+    pub fn is_valid(&self, now: DateTime<Utc>) -> bool {
+        self.not_before <= now && self.not_after > now
+    }
+}
+
 impl PartialOrd for Validity {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(if self.not_before < other.not_before {
