@@ -29,10 +29,10 @@ tracing = "0.1"
 url = "2"
 
 http = { version = "0.2", optional = true }
-nom = { version = "6", optional = true }
+nom = { version = "7", optional = true }
 openid = { version = "0.10", optional = true }
-opentelemetry = { version = "0.17", optional = true }
-opentelemetry-http = { version = "0.6", optional = true }
+opentelemetry = { version = "0.18", optional = true }
+opentelemetry-http = { version = "0.7", optional = true }
 reqwest = { version = "0.11.11", features = ["json"], optional = true } # requires 0.11.11+
 
 lazy_static = { version = "1", optional = true }
