@@ -56,16 +56,8 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ matrix.target }}-${{ matrix.toolchain }}-${{ hashFiles('**/Cargo.toml') }}
 
       - name: Install toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: ${{ matrix.toolchain }}
-          target: ${{ matrix.target }}
-          override: true
-          components: clippy
-
-      - name: Install toolchain
         run: |
-          rustup toolchain install ${{ matrix.toolchain }}-${{ matrix.target }}
+          rustup toolchain install ${{ matrix.toolchain }} --target ${{ matrix.target }} --components clippy
 
       - name: Run cargo check
         run: |
