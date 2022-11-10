@@ -65,7 +65,7 @@ jobs:
 
       - name: Install toolchain
         run: |
-          rustup install ${{ matrix.toolchain }}-${{ matrix.target }}
+          rustup toolchain install ${{ matrix.toolchain }}-${{ matrix.target }}
 
       - name: Run cargo check
         run: |
