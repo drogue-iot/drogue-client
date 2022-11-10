@@ -57,7 +57,7 @@ jobs:
 
       - name: Install toolchain
         run: |
-          rustup toolchain install ${{ matrix.toolchain }} --target ${{ matrix.target }} --components clippy
+          rustup toolchain install ${{ matrix.toolchain }} --target ${{ matrix.target }} --component clippy
 
       - name: Run cargo check
         run: |
