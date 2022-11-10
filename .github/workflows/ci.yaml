@@ -13,27 +13,18 @@ jobs:
 
 
   format:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     steps:
       - uses: actions/checkout@v3
 
-      - name: Install toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          override: true
-          components: rustfmt
-
       - name: Run cargo fmt
-        uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: --all -- --check
+        run:
+          cargo fmt --all -- --check
 
 
   check:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     needs:
       - format
@@ -72,21 +63,21 @@ jobs:
           override: true
           components: clippy
 
+      - name: Install toolchain
+        run: |
+          rustup install ${{ matrix.toolchain }}-${{ matrix.target }}
+
       - name: Run cargo check
-        uses: actions-rs/cargo@v1
-        with:
-          command: check
-          args: --target ${{ matrix.target }} ${{ matrix.features }}
+        run: |
+          cargo +${{ matrix.toolchain }} check --target ${{ matrix.target }} ${{ matrix.features }}
 
       - name: Run cargo clippy
-        uses: actions-rs/cargo@v1
-        with:
-          command: clippy
-          args: --target ${{ matrix.target }} ${{ matrix.features }} -- -D warnings
+        run: |
+          cargo +${{ matrix.toolchain }} clippy --target ${{ matrix.target }} ${{ matrix.features }} -- -D warnings
 
 
   test:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     needs:
       - check
@@ -105,13 +96,6 @@ jobs:
             target/
           key: ${{ runner.os }}-cargo-${{ matrix.target }}-${{ matrix.toolchain }}-${{ hashFiles('**/Cargo.toml') }}
 
-      - name: Install toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          override: true
-
       - name: Run cargo test
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
+        run: |
+          cargo test
