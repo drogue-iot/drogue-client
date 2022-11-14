@@ -74,7 +74,7 @@ impl Device {
         }
     }
 
-    /// Insert a credential entry to the crendentials of a device.
+    /// Insert a credential entry to the credentials of a device.
     /// If there are no credentials already existing an array is created
     /// if there is an error deserializing the existing data an error is returned
     pub fn add_credential(&mut self, credential: Credential) -> Result<(), serde_json::Error> {
