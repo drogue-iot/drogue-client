@@ -1,4 +1,4 @@
-use chrono::{DateTime, TimeZone, Utc};
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -20,7 +20,7 @@ use std::collections::HashMap;
  */
 
 fn epoch() -> DateTime<Utc> {
-    Utc.timestamp_millis(0)
+    Default::default()
 }
 
 /// Non-scoped metadata.
@@ -105,7 +105,7 @@ impl Default for ScopedMetadata {
             uid: Default::default(),
             labels: Default::default(),
             annotations: Default::default(),
-            creation_timestamp: chrono::Utc::now(),
+            creation_timestamp: Utc::now(),
             resource_version: Default::default(),
             generation: Default::default(),
             deletion_timestamp: Default::default(),
@@ -121,7 +121,7 @@ impl Default for NonScopedMetadata {
             uid: Default::default(),
             labels: Default::default(),
             annotations: Default::default(),
-            creation_timestamp: chrono::Utc::now(),
+            creation_timestamp: Utc::now(),
             resource_version: Default::default(),
             generation: Default::default(),
             deletion_timestamp: Default::default(),
@@ -136,10 +136,10 @@ pub trait CommonMetadata {
     fn uid(&self) -> &String;
     fn labels(&self) -> &HashMap<String, String>;
     fn annotations(&self) -> &HashMap<String, String>;
-    fn creation_timestamp(&self) -> &DateTime<chrono::Utc>;
+    fn creation_timestamp(&self) -> &DateTime<Utc>;
     fn resource_version(&self) -> &String;
     fn generation(&self) -> u64;
-    fn deletion_timestamp(&self) -> &Option<DateTime<chrono::Utc>>;
+    fn deletion_timestamp(&self) -> &Option<DateTime<Utc>>;
     fn finalizers(&self) -> &Vec<String>;
 }
 
@@ -312,6 +312,11 @@ common_metadata!(NonScopedMetadata);
 #[cfg(test)]
 mod test {
     use super::*;
+
+    #[test]
+    fn test_epoch() {
+        assert_eq!(0, epoch().timestamp_millis());
+    }
 
     #[test]
     fn test_set() {
