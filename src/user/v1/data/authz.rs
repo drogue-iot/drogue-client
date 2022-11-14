@@ -4,10 +4,26 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Permission {
-    Owner,
-    Admin,
-    Write,
+    Resource(ResourcePermission),
+    Token(TokenPermission)
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub enum TokenPermission {
+    Create,
     Read,
+    Delete,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub enum ResourcePermission {
+    Create,     // Create a resource
+    Delete,     // delete a resource
+    Write,      // Write resource details
+    Read,       // read resource details
+    Own,       // own the resource (used to transfer apps)
+    Subscribe,  // consume app events
+    Command,    // publish commands to app
 }
 
 impl fmt::Display for Permission {
