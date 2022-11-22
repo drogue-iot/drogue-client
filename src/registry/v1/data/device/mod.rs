@@ -89,18 +89,25 @@ impl Device {
         })
     }
 
-    /// Retrieve the credentials of this device
-    pub fn get_credentials(&self) -> Option<Vec<Credential>> {
-        let credentials = match self.section::<DeviceSpecAuthentication>() {
-            Some(Ok(auth)) => auth.credentials,
-            _ => match self.section::<DeviceSpecCredentials>() {
-                Some(Ok(credentials)) => credentials.credentials,
-                _ => {
-                    return None;
-                }
+    /// Retrieve the authentication section of a device.
+    ///
+    /// This is the same as: `self.section::<DeviceSpecAuthentication>()`.
+    ///
+    /// However, it also takes into account the legacy `DeviceSpecCredentials` section, which will
+    /// be loaded if the `authentication` section is not present.
+    pub fn get_authentication(
+        &self,
+    ) -> Option<Result<DeviceSpecAuthentication, serde_json::Error>> {
+        match self.section::<DeviceSpecAuthentication>() {
+            Some(auth) => Some(auth),
+            None => match self.section::<DeviceSpecCredentials>() {
+                Some(Ok(credentials)) => Some(Ok(DeviceSpecAuthentication {
+                    credentials: credentials.credentials,
+                })),
+                Some(Err(err)) => Some(Err(err)),
+                None => None,
             },
-        };
-        Some(credentials)
+        }
     }
 }
 
