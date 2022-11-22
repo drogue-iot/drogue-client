@@ -21,6 +21,15 @@ pub enum MqttDialect {
         #[serde(default, skip_serializing_if = "is_default")]
         device_prefix: bool,
     },
+    #[serde(rename_all = "camelCase")]
+    #[serde(alias = "wot")]
+    WebOfThings {
+        #[serde(default, skip_serializing_if = "is_default")]
+        node_wot_bug: bool,
+    },
+    #[serde(rename_all = "camelCase")]
+    #[serde(alias = "c8y")]
+    Cumulocity,
 }
 
 impl Default for MqttDialect {
@@ -89,6 +98,39 @@ mod test {
                 "dialect":{
                     "type": "plainTopic",
                     "devicePrefix": true,
+                }
+            }))
+            .unwrap()
+        )
+    }
+
+    #[test]
+    fn test_wot() {
+        assert_eq!(
+            MqttSpec {
+                dialect: MqttDialect::WebOfThings {
+                    node_wot_bug: false,
+                }
+            },
+            serde_json::from_value(json!({
+                "dialect":{
+                    "type": "wot",
+                }
+            }))
+            .unwrap()
+        )
+    }
+
+    #[test]
+    fn test_wot_bug() {
+        assert_eq!(
+            MqttSpec {
+                dialect: MqttDialect::WebOfThings { node_wot_bug: true }
+            },
+            serde_json::from_value(json!({
+                "dialect":{
+                    "type": "wot",
+                    "nodeWotBug": true,
                 }
             }))
             .unwrap()
