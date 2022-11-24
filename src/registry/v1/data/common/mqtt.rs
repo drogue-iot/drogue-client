@@ -30,6 +30,8 @@ pub enum MqttDialect {
     #[serde(rename_all = "camelCase")]
     #[serde(alias = "c8y")]
     Cumulocity,
+    #[serde(rename_all = "camelCase")]
+    Azure,
 }
 
 impl Default for MqttDialect {
