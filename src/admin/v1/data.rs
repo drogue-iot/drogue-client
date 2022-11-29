@@ -27,7 +27,10 @@ pub struct MemberEntry {
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, Eq, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub enum Role {
-    /// Allow editing app members and delete the app.
+    /// All the permissions except owning the app.
+    /// Edit members for the applications.
+    /// Read and write details (devices as well).
+    /// Publish and subscribe.
     Admin,
     /// Allow reading and writing devices and application details.
     Manager,
@@ -36,9 +39,7 @@ pub enum Role {
     /// Allow consuming app events.
     Subscriber,
     /// Allow publishing command to the apps
-    Publisher,    // publish commands to app
-    /// grants all then permissions.
-    Owner,
+    Publisher,
 }
 
 impl Display for Role {
@@ -49,7 +50,6 @@ impl Display for Role {
             Self::Reader => write!(f, "Reader"),
             Self::Subscriber => write!(f, "Subscriber"),
             Self::Publisher => write!(f, "Publisher"),
-            Self::Owner => write!(f, "Owner"),
         }
     }
 }
@@ -64,7 +64,6 @@ impl FromStr for Role {
             "Reader" | "reader" => Ok(Role::Reader),
             "Subscriber" | "subscriber" => Ok(Role::Subscriber),
             "Publisher" | "publisher" => Ok(Role::Publisher),
-            "Owner" | "owner" => Ok(Role::Owner),
             _ => Err(()),
         }
     }
