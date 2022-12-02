@@ -1,5 +1,6 @@
 //! Structures to work with users and identities.
 
+use crate::tokens::v1::AccessTokenScopes;
 use serde::{Deserialize, Serialize};
 
 /// Details on an authenticated user.
@@ -9,4 +10,6 @@ pub struct UserDetails {
     pub user_id: String,
     /// Granted roles.
     pub roles: Vec<String>,
+    /// Limited Authorization scopes.
+    pub scopes: Option<AccessTokenScopes>,
 }
