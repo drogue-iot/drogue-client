@@ -6,15 +6,13 @@ use serde::{Deserialize, Serialize};
 pub enum Permission {
     Device(DevicePermission),
     App(ApplicationPermission),
-    //fixme : move this in another struct
-    //Token(TokenPermission)
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum TokenPermission {
-    Create,
-    List,
-    Delete,
+    Create,  // Create new tokens
+    List,    // Read all tokens for this user
+    Delete,  // Delete any token for this user
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
